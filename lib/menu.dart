@@ -54,17 +54,17 @@ class menuPage extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: containerWidth * 0.403,
+                left: containerWidth * 0.385,
                 top: 300,
                 child: SizedBox(
-                  width: 90,
+                  width: 105,
                   height: 40,
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         PageRouteBuilder(
-                          pageBuilder: (_, animation, __) => login.loginPage(),
+                          pageBuilder: (_, animation, __) => login.LoginPage(),
                           transitionsBuilder: (_, animation, __, child) {
                             const begin = Offset(1.0, 0.0);
                             const end = Offset.zero;

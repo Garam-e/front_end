@@ -1,10 +1,18 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'sign.dart' as sign;
 import 'reset_password.dart';
 
-class loginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  bool _isSwitched = false;
   TextEditingController _firstTextEditingController = TextEditingController();
   TextEditingController _secondTextEditingController = TextEditingController();
+
   Route _customPageRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => child,
@@ -210,10 +218,10 @@ class loginPage extends StatelessWidget {
               ),
               Positioned(
                 left: containerWidth * 0.063,
-                top: 360,
+                top: 355,
                 child: SizedBox(
                   width: containerWidth * 0.88,
-                  height: 43,
+                  height: 50,
                   child: ElevatedButton(
                     onPressed: () {
                       var ID = _firstTextEditingController.text;
@@ -230,7 +238,7 @@ class loginPage extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 17,
+                        fontSize: 20,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
                         height: 1.53,
@@ -303,22 +311,40 @@ class loginPage extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 31,
-                top: 420,
-                child: Text(
-                  '자동 로그인',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFF2E5A9C),
-                    fontSize: 13,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    height: 2,
-                    letterSpacing: -0.34,
-                    decoration: TextDecoration.none,
-                  ),
-                ),
-              ),
+                  left: 31,
+                  top: 414,
+                  child: Row(
+                    children: [
+                      Text(
+                        '자동 로그인',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFF2E5A9C),
+                          fontSize: 13,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w500,
+                          height: 2,
+                          letterSpacing: -0.34,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+
+                      SizedBox(width: 3), // 여기서 간격을 조정합니다.
+
+                      Transform.scale(
+                          scale: 0.6, // 여기서 버튼의 크기를 조정합니다.
+                          child: CupertinoSwitch(
+                            value: _isSwitched,
+                            onChanged: (value) {
+                              setState(() {
+                                _isSwitched = value;
+                              });
+                            },
+                            activeColor:
+                                Color(0xFF2E5A9C), // 여기서 버튼의 색상을 조정합니다.
+                          ))
+                    ],
+                  )),
             ],
           ),
         ),

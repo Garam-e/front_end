@@ -5,9 +5,11 @@ import 'menu.dart' as menu;
 import 'setting.dart';
 import 'reset_password.dart';
 import './ExpandableListExample.dart';
+import './classExample.dart';
 import 'package:http/http.dart' as http;
 import 'lists.dart';
 import 'package:share/share.dart';
+import 'package:flutter/services.dart';
 //import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() {
@@ -19,14 +21,6 @@ void main() {
     ),
   );
 }
-
-final List<String> enterList = [
-  'apple',
-  'banana',
-  'cherry',
-  'durian',
-];
-
 // 입력창 위에 보여줄 자동완성 목록
 
 String listTitle = '실시간 TOP 질문';
@@ -55,8 +49,10 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     // 초기 메시지 설정
-    _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0));
-    _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9));
+    _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0,
+        showTimestampAndShareIcon: false));
+    _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9,
+        showUserNameAndPhoto: false));
   }
 
   void _sendMessage(String text, bool isLeft, {int box = 0}) {
@@ -97,14 +93,15 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildMessageItem(Message message) {
     Color _unselectedTextColor = Colors.black;
     Color _selectedTextColor = Colors.white;
+
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5.0),
+      padding: EdgeInsets.symmetric(vertical: 0.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment:
             message.isLeft ? MainAxisAlignment.start : MainAxisAlignment.end,
         children: [
-          if (message.isLeft)
+          if (message.isLeft && message.showUserNameAndPhoto ?? false)
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: Container(
@@ -121,6 +118,15 @@ class _ChatScreenState extends State<ChatScreen> {
                     borderRadius: BorderRadius.circular(100),
                   ),
                 ),
+              ),
+            )
+          else if (message.isLeft)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Container(
+                margin: EdgeInsets.only(left: 8.0),
+                width: 38,
+                height: 38,
               ),
             )
           else
@@ -152,94 +158,118 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           Flexible(
-            child: Column(
-              crossAxisAlignment: message.isLeft
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.end,
-              children: [
-                if (message.isLeft)
-                  Text(
-                    "가람이",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                Container(
-                  constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.7),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFECF4FF),
-                    borderRadius: BorderRadius.only(
-                      topRight: const Radius.circular(10),
-                      bottomLeft: const Radius.circular(10),
-                      bottomRight: const Radius.circular(10),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+            child: Transform.translate(
+              offset: Offset(
+                  0,
+                  message.showUserNameAndPhoto ?? false
+                      ? message.showUserNameAndPhoto ?? false
+                          ? -10
+                          : 0
+                      : -40),
+              child: Container(
+                margin: EdgeInsets.only(right: 8.0),
+                child: Column(
+                  crossAxisAlignment: message.isLeft
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.end,
+                  children: [
+                    if (message.isLeft)
                       Text(
-                        message.text,
-                        style: TextStyle(
-                          color: Colors.black,
-                        ),
+                        message.showUserNameAndPhoto ?? false ? "가람이" : "",
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 8.0),
-                      Wrap(
-                        spacing: 8.0,
-                        runSpacing: 8.0,
-                        children: List.generate(
-                          message.box,
-                          (index) => GestureDetector(
-                            onTap: () {
-                              // 버튼 클릭 이벤트 처리
-                              //print('버튼 $index 클릭됨');
-                              setState(() {
-                                _messages
-                                    .add(Message("버튼 $index 클릭됨", true, 0));
-                              });
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                _scrollController.animateTo(
-                                  _scrollController
-                                      .position.maxScrollExtent, // 맨 밑으로 이동
-                                  duration: Duration(milliseconds: 200),
-                                  curve: Curves.easeInOut,
-                                );
-                              });
-                              //우선 임의로 처리 후에 안에 있는 텍스트 내용을 바탕으로 서버에서 데이터 받아오기
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                                vertical: 8.0,
+                    Container(
+                      constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.7),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECF4FF),
+                        borderRadius: message.isLeft
+                            ? BorderRadius.only(
+                                topRight: const Radius.circular(10),
+                                bottomLeft: const Radius.circular(10),
+                                bottomRight: const Radius.circular(10),
+                              )
+                            : BorderRadius.only(
+                                topLeft: const Radius.circular(
+                                    10), // topRight을 topLeft로 변경
+                                bottomLeft: const Radius.circular(10),
+                                bottomRight: const Radius.circular(10),
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '버튼 $index',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                ),
-                              ),
-                              height: 45, // 높이 45
-                              width: 78, // 가로 88
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            message.text,
+                            style: TextStyle(
+                              color: Colors.black,
                             ),
                           ),
-                        ),
+                          if (message.box != 0) SizedBox(height: 8.0),
+                          Wrap(
+                            spacing: 8.0,
+                            runSpacing: 8.0,
+                            children: List.generate(
+                              message.box,
+                              (index) => GestureDetector(
+                                onTap: () {
+                                  // 버튼 클릭 이벤트 처리
+                                  //print('버튼 $index 클릭됨');
+                                  setState(() {
+                                    _messages
+                                        .add(Message("버튼 $index 클릭됨", true, 0));
+                                  });
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    _scrollController.animateTo(
+                                      _scrollController
+                                          .position.maxScrollExtent, // 맨 밑으로 이동
+                                      duration: Duration(milliseconds: 200),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  });
+                                  //우선 임의로 처리 후에 안에 있는 텍스트 내용을 바탕으로 서버에서 데이터 받아오기
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12.0,
+                                    vertical: 8.0,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '버튼 $index',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  height: 45, // 높이 45
+                                  width: 78, // 가로 88
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 4.0),
+                    Text(
+                      message.createdAt != null
+                          ? (message.showTimestampAndShareIcon
+                              ? message.getCreatedAtString()
+                              : "")
+                          : '',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 4.0),
-                Text(
-                  message.createdAt != null ? message.getCreatedAtString() : '',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
+              ),
             ),
           ),
-          if (message.isLeft)
+          if (message.isLeft && message.showUserNameAndPhoto ?? false)
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: GestureDetector(
@@ -343,6 +373,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     items: [
                       PopupMenuItem<String>(
                         child: Container(
+                          constraints: BoxConstraints(maxWidth: 120),
+                          padding: EdgeInsets.symmetric(horizontal: 16),
                           color: _selectedLanguage == 'KOR'
                               ? Color(0xFFEDF4FF)
                               : null,
@@ -362,6 +394,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       PopupMenuItem<String>(
                         child: Container(
+                          constraints: BoxConstraints(maxWidth: 120),
+                          padding: EdgeInsets.symmetric(horizontal: 16),
                           color: _selectedLanguage == 'ENG'
                               ? Color(0xFFEDF4FF)
                               : null,
@@ -379,25 +413,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                         value: 'ENG',
                       ),
-                      PopupMenuItem<String>(
-                        child: Container(
-                          color: _selectedLanguage == 'CHI'
-                              ? Color(0xFFEDF4FF)
-                              : null,
-                          child: Text(
-                            'CHI',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 17,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w700,
-                              height: 1.53,
-                              letterSpacing: -0.44,
-                            ),
-                          ),
-                        ),
-                        value: 'CHI',
-                      ),
                     ],
                     elevation: 16,
                   ).then((value) {
@@ -406,16 +421,21 @@ class _ChatScreenState extends State<ChatScreen> {
                     }
                   });
                 },
-                child: Text(
-                  _selectedLanguage,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                    height: 1.53,
-                    letterSpacing: -0.44,
-                  ),
+                child: Row(
+                  children: [
+                    Text(
+                      _selectedLanguage,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w700,
+                        height: 1.53,
+                        letterSpacing: -0.44,
+                      ),
+                    ),
+                    Icon(Icons.arrow_drop_down, color: Colors.white),
+                  ],
                 ),
               ),
             ),
@@ -611,7 +631,7 @@ class _ChatScreenState extends State<ChatScreen> {
               left: 0,
               child: Container(
                 width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.87,
+                height: MediaQuery.of(context).size.height * 0.88,
                 color: Colors.white,
                 child: Column(
                   children: [
@@ -631,7 +651,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       onSendMessage: _sendMessage,
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 3.0, vertical: 2),
                       color: Color(0xFFE2E4E5),
                       child: Row(
                         children: [
@@ -645,9 +666,11 @@ class _ChatScreenState extends State<ChatScreen> {
                                   // 버튼이 눌렸을 때 수행할 작업을 여기에 작성하세요.
                                   setState(() {
                                     _messages.add(Message(
-                                        "안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0));
+                                        "안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0,
+                                        showTimestampAndShareIcon: false));
                                     _messages.add(Message(
-                                        "안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9));
+                                        "안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9,
+                                        showUserNameAndPhoto: false));
                                   });
                                   WidgetsBinding.instance
                                       .addPostFrameCallback((_) {
@@ -663,6 +686,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                             ),
                           ),
+                          SizedBox(width: 5.0),
                           Container(
                             width: containerWidth * 0.8,
                             height: 30,
@@ -676,19 +700,19 @@ class _ChatScreenState extends State<ChatScreen> {
                                 ),
                                 decoration: InputDecoration(
                                   contentPadding: EdgeInsets.symmetric(
-                                      vertical: 8.0, horizontal: 16.0),
+                                      vertical: 5.0, horizontal: 12.0),
                                   hintText: "질문을 입력하세요",
                                   hintStyle: TextStyle(color: Colors.grey),
                                   fillColor: Colors.white,
                                   filled: true,
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30),
+                                    borderRadius: BorderRadius.circular(25),
                                     borderSide: BorderSide(
                                         width: 0.8,
                                         color: Color.fromARGB(255, 0, 0, 0)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30),
+                                    borderRadius: BorderRadius.circular(25),
                                     borderSide: BorderSide(
                                         width: 0.15, color: Color(0xFFBEBEBE)),
                                   ),
@@ -723,13 +747,13 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           Row(
                             children: [
-                              SizedBox(width: 8.0),
+                              SizedBox(width: 7.0),
                               InkWell(
                                 onTap: _toggleStar,
                                 child: AnimatedCrossFade(
                                   duration: const Duration(milliseconds: 300),
                                   firstChild: Transform.scale(
-                                    scale: _isStarSelected ? 1 : 1.1,
+                                    scale: _isStarSelected ? 1 : 1,
                                     child: SizedBox(
                                       width: 28,
                                       height: 28,
@@ -739,7 +763,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     ),
                                   ),
                                   secondChild: Transform.scale(
-                                    scale: _isStarSelected ? 1.1 : 1,
+                                    scale: _isStarSelected ? 1 : 1,
                                     child: SizedBox(
                                       width: 28,
                                       height: 28,
@@ -883,30 +907,4 @@ class _ChatScreenState extends State<ChatScreen> {
       },
     );
   }
-}
-
-class Message {
-  String text;
-  bool isLeft;
-  int box;
-  bool _isStarSelected;
-  final DateTime createdAt;
-  Message(this.text, this.isLeft, this.box, {bool isStarSelected = false})
-      : _isStarSelected = isStarSelected,
-        createdAt = DateTime.now();
-
-  String getCreatedAtString() {
-    final hour = createdAt.hour >= 12 ? createdAt.hour - 12 : createdAt.hour;
-    final min = createdAt.minute;
-    final timeOfDay = createdAt.hour >= 12 ? '오후' : '오전';
-    return '$timeOfDay ${(hour < 10) ? '0$hour' : hour}:${(min < 10) ? '0$min' : min}';
-  }
-}
-
-class user {
-  String name;
-  String id;
-  String password;
-
-  user(this.id, this.name, this.password);
 }
