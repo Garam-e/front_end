@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_3/settings_API.dart';
 import 'package:provider/provider.dart';
 
 class setting extends StatelessWidget {
@@ -26,51 +27,51 @@ class setting extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           Positioned(
-            top: 140, // 원하는 위치 조정
+            top: screenWidth * 0.3, // 원하는 위치 조정 140
             child: Text(
               "가람이 (Garam-e)",
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.normal,
                 fontFamily: 'Inter',
               ),
             ),
           ),
           Positioned(
-            top: 190, // 원하는 위치 조정
+            top: screenWidth * 0.1, // 원하는 위치 조정 190
             child: Image.asset(
-              'assets/logo_gachon.png', // 이미지 파일 경로
-              width: 99, // 이미지 너비 조정
-              height: 98, // 이미지 높이 조정
+              'assets/garam-E.png', // 이미지 파일 경로
+              width: 400, // 이미지 너비 조정
+              height: 400, // 이미지 높이 조정
             ),
           ),
           Positioned(
-            top: 333, // 원하는 위치 조정
+            top: screenWidth * 0.78, // 원하는 위치 조정
             child: Text.rich(
               TextSpan(
-                text: '김밤비 ',
+                text: '김밤비 ', // 추후 닉네임 받아올 페이지
                 style: TextStyle(
-                  color: Color(0xFF2F5B9C),
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Inter',
-                ),
+                    color: Color(0xFF2F5B9C),
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Inter',
+                    fontSize: 18),
                 children: <TextSpan>[
                   TextSpan(
                     text: '님',
                     style: TextStyle(
-                      color: Color(0xFF000000),
-                      fontWeight: FontWeight.normal,
-                      fontFamily: 'Inter',
-                    ),
+                        color: Color(0xFF000000),
+                        fontWeight: FontWeight.normal,
+                        fontFamily: 'Inter',
+                        fontSize: 18),
                   ),
                 ],
               ),
             ),
           ),
           Positioned(
-            top: 500,
+            top: screenWidth * 1.22, // 500
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 TextEditingController _passwordController =
                     TextEditingController(); // 비밀번호 입력 컨트롤러 선언
 
@@ -81,7 +82,7 @@ class setting extends StatelessWidget {
                       contentPadding: EdgeInsets.zero,
                       content: Container(
                         width: screenWidth * 0.8,
-                        height: screenWidth * 0.5,
+                        height: screenWidth * 0.45,
                         child: Column(
                           mainAxisAlignment:
                               MainAxisAlignment.center, // 세로 중앙 정렬
@@ -170,13 +171,16 @@ class setting extends StatelessWidget {
 
                             // 확인 버튼
                             ElevatedButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 String enteredPassword =
                                     _passwordController.text;
+
+                                //TODO: 비밀번호 확인 로직 추가 필요
 
                                 // 입력한 비밀번호가 올바른지 확인
                                 if (enteredPassword == "1234") {
                                   Navigator.pop(context); // 비밀번호 다이얼로그 닫기
+
                                   showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
@@ -186,6 +190,7 @@ class setting extends StatelessWidget {
                                       TextEditingController
                                           _passwordController =
                                           TextEditingController();
+
                                       return AlertDialog(
                                         contentPadding: EdgeInsets.zero,
                                         content: Container(
@@ -322,10 +327,16 @@ class setting extends StatelessWidget {
                                               ),
                                               SizedBox(height: 15),
                                               ElevatedButton(
-                                                onPressed: () {
+                                                onPressed: () async {
                                                   String newNickname =
                                                       _nicknameController.text;
                                                   // TODO: 새 닉네임을 처리하는 로직 추가
+                                                  String newPassword =
+                                                      _passwordController.text;
+
+                                                  await updateUserInfo(
+                                                      newNickname, newPassword);
+
                                                   Navigator.pop(context);
                                                 },
                                                 child: Text("확인"),
@@ -372,7 +383,7 @@ class setting extends StatelessWidget {
               ),
               child: Container(
                 width: buttonWidth,
-                height: 40,
+                height: 45,
                 padding: EdgeInsets.symmetric(vertical: 5),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -398,7 +409,7 @@ class setting extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 570,
+            top: screenWidth * 1.38,
             child: Stack(
               children: [
                 ElevatedButton(
@@ -606,7 +617,7 @@ class setting extends StatelessWidget {
                   ),
                   child: Container(
                     width: buttonWidth,
-                    height: 40,
+                    height: 45,
                     padding: EdgeInsets.symmetric(vertical: 5),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -638,7 +649,7 @@ class setting extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 640,
+            top: screenWidth * 1.54,
             child: ElevatedButton(
               onPressed: () {
                 showDialog(
@@ -764,11 +775,30 @@ class setting extends StatelessWidget {
                             ),
                             SizedBox(height: 10),
                             ElevatedButton(
-                              onPressed: () {
-                                String newNickname =
+                              onPressed: () async {
+                                String title =
+                                    _inquiryTitleEditingController.text;
+                                String content =
                                     _inquiryDetailEditingController.text;
-                                // TODO: 새 닉네임을 처리하는 로직 추가
-                                Navigator.pop(context);
+                                String email = "132@gachon.ac.kr";
+                                try {
+                                  final response =
+                                      await sendInquiry(title, content, email);
+                                  if (response != null &&
+                                      response['isSucceed'] == true) {
+                                    // TODO: 문의 성공 처리 (사용자에게 메시지 등)
+                                    Navigator.pop(context); // AlertDialog 닫기
+                                  } else {
+                                    // TODO: 문의 실패 처리 (사용자에게 메시지 등)
+                                    print(
+                                        "Inquiry failed: ${response['message']}");
+                                  }
+                                } catch (e) {
+                                  print("Error while sending inquiry: $e");
+                                  // TODO: 에러 처리 (사용자에게 메시지 등)
+                                }
+
+                                Navigator.pop(context); // AlertDialog 닫기
                               },
                               child: Text("확인"),
                               style: ElevatedButton.styleFrom(
@@ -795,7 +825,7 @@ class setting extends StatelessWidget {
               ),
               child: Container(
                 width: buttonWidth,
-                height: 40,
+                height: 45,
                 padding: EdgeInsets.symmetric(vertical: 5), // 높이 조정
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -821,10 +851,29 @@ class setting extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 700,
+            top: screenWidth * 1.68,
             right: screenWidth * 0.04,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () async {
+                try {
+                  String userId = "123";
+                  String password = "123";
+                  String nickname = "123";
+
+                  final response = await sendLogout(userId, password, nickname);
+                  if (response != null) {
+                    // TODO: 로그아웃 성공 처리 (사용자에게 메시지 등)
+                    print('Logout successful: ${response['message']}');
+                    // 이후에 로그인 화면 등으로 이동하는 처리를 추가할 수 있습니다.
+                  } else {
+                    // TODO: 로그아웃 실패 처리 (사용자에게 메시지 등)
+                    print('Logout failed: ${response['message']}');
+                  }
+                } catch (e) {
+                  print("Error while logging out: $e");
+                  // TODO: 에러 처리 (사용자에게 메시지 등)
+                }
+              },
               style: ElevatedButton.styleFrom(
                 primary: Colors.white,
                 shape: RoundedRectangleBorder(

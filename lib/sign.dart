@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-import './serverFunction.dart';
+import 'serverFunction.dart';
 
 class signPage extends StatelessWidget {
-  TextEditingController _idController = TextEditingController(); // 컨트롤러 생성
-  TextEditingController _singNumberController = TextEditingController();
-  TextEditingController _passController = TextEditingController();
-  TextEditingController _pass2Controller = TextEditingController();
-  TextEditingController _nameController = TextEditingController();
+  final TextEditingController _idController =
+      TextEditingController(); // 컨트롤러 생성
+  final TextEditingController _singNumberController = TextEditingController();
+  final TextEditingController _passController = TextEditingController();
+  final TextEditingController _pass2Controller = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
 
   bool certificationState = false;
+
+  signPage({super.key});
   Route _customPageRoute(Widget child) {
     return MaterialPageRoute(builder: (context) => child);
   }
@@ -72,7 +74,7 @@ class signPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.pop(dialogContext);
                 },
-                child: Text('확인'),
+                child: const Text('확인'),
               ),
             ],
           ),
@@ -85,14 +87,14 @@ class signPage extends StatelessWidget {
         showDialog(
           context: context,
           builder: (BuildContext dialogContext) => AlertDialog(
-              title: Text('가입 실패33'),
-              content: Text('101'),
+              title: const Text('가입 실패33'),
+              content: const Text('101'),
               actions: [
                 TextButton(
                     onPressed: () {
                       Navigator.pop(dialogContext);
                     },
-                    child: Text("확인"))
+                    child: const Text("확인"))
               ]),
         );
       }
@@ -104,7 +106,7 @@ class signPage extends StatelessWidget {
           width: containerWidth,
           height: containerHeight,
           clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(color: Colors.white),
+          decoration: const BoxDecoration(color: Colors.white),
           child: Stack(
             children: [
               Positioned(
@@ -114,7 +116,7 @@ class signPage extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(context);
                   },
-                  child: Container(
+                  child: SizedBox(
                     width: 40,
                     height: 31,
                     child: Stack(
@@ -125,7 +127,7 @@ class signPage extends StatelessWidget {
                           child: Container(
                             width: 40,
                             height: 31,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               image: DecorationImage(
                                 image: AssetImage("assets/back.png"),
                               ),
@@ -140,7 +142,7 @@ class signPage extends StatelessWidget {
               Positioned(
                 left: 25,
                 top: containerHeight * 0.11,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 168,
                   height: 26,
                   child: Text(
@@ -160,7 +162,7 @@ class signPage extends StatelessWidget {
               Positioned(
                 left: 25,
                 top: containerHeight * 0.18,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 246,
                   height: 23,
                   child: Text(
@@ -184,18 +186,18 @@ class signPage extends StatelessWidget {
                 child: Material(
                   // Material 위젯 추가
                   type: MaterialType.transparency,
-                  child: Container(
+                  child: SizedBox(
                     width: containerWidth * 0.88,
                     height: 49,
                     child: TextField(
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                       controller:
                           _idController, // 해당 입력창에 TextEditingController 연결
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Color(0x192E5A9C),
+                        fillColor: const Color(0x192E5A9C),
                         hintText: " 이메일",
-                        hintStyle: TextStyle(color: Colors.grey),
+                        hintStyle: const TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide.none,
@@ -216,18 +218,18 @@ class signPage extends StatelessWidget {
                 child: Material(
                   // Material 위젯 추가
                   type: MaterialType.transparency,
-                  child: Container(
+                  child: SizedBox(
                     width: containerWidth * 0.88,
                     height: 49,
                     child: TextField(
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                       controller:
                           _singNumberController, // 해당 입력창에 TextEditingController 연결
                       decoration: InputDecoration(
                         filled: true,
                         hintText: " 인증번호",
-                        hintStyle: TextStyle(color: Colors.grey),
-                        fillColor: Color(0x192E5A9C),
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        fillColor: const Color(0x192E5A9C),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide.none,
@@ -244,7 +246,7 @@ class signPage extends StatelessWidget {
               Positioned(
                 left: 196,
                 top: containerHeight * 0.235,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 90,
                   height: 23,
                   child: Text(
@@ -264,7 +266,7 @@ class signPage extends StatelessWidget {
               Positioned(
                 left: 286,
                 top: containerHeight * 0.23,
-                child: Container(
+                child: SizedBox(
                   width: 87,
                   height: 37,
                   child: ElevatedButton(
@@ -277,11 +279,11 @@ class signPage extends StatelessWidget {
                         showDialog(
                           context: context,
                           builder: (BuildContext context) => AlertDialog(
-                              title: Text("알림"),
-                              content: Text("인증번호가 전송되었습니다."),
+                              title: const Text("알림"),
+                              content: const Text("인증번호가 전송되었습니다."),
                               actions: [
                                 TextButton(
-                                    child: Text("확인"),
+                                    child: const Text("확인"),
                                     onPressed: () {
                                       Navigator.of(context).pop();
                                     })
@@ -290,16 +292,18 @@ class signPage extends StatelessWidget {
                       } else {
                         showDialog(
                           context: context,
-                          builder: (BuildContext contex) => AlertDialog(
+                          builder: (BuildContext contex) => const AlertDialog(
                               title: Text("알림"),
                               content: Text("이메일 형식이 일치하지 않습니다."),
                               actions: [
-                                TextButton(child: Text("확인"), onPressed: null)
+                                TextButton(onPressed: null, child: Text("확인"))
                               ]),
                         );
                       }
                     },
-                    child: Text(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E5A9C)),
+                    child: const Text(
                       '인증요청',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -311,14 +315,13 @@ class signPage extends StatelessWidget {
                         letterSpacing: -0.39,
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(primary: Color(0xFF2E5A9C)),
                   ),
                 ),
               ),
               Positioned(
                 left: 286,
                 top: containerHeight * 0.33,
-                child: Container(
+                child: SizedBox(
                   width: 87,
                   height: 37,
                   child: ElevatedButton(
@@ -333,11 +336,11 @@ class signPage extends StatelessWidget {
                         showDialog(
                           context: context,
                           builder: (BuildContext context) => AlertDialog(
-                              title: Text("알림"),
-                              content: Text("인증번호가 일치합니다"),
+                              title: const Text("알림"),
+                              content: const Text("인증번호가 일치합니다"),
                               actions: [
                                 TextButton(
-                                    child: Text("확인"),
+                                    child: const Text("확인"),
                                     onPressed: () {
                                       Navigator.of(context).pop();
                                     })
@@ -347,16 +350,20 @@ class signPage extends StatelessWidget {
                         certificationState = false;
                         showDialog(
                           context: context,
-                          builder: (BuildContext contex) => AlertDialog(
+                          builder: (BuildContext contex) => const AlertDialog(
                               title: Text("알림"),
                               content: Text("인증번호가 일치하지 않습니다."),
                               actions: [
-                                TextButton(child: Text("확인"), onPressed: null)
+                                TextButton(onPressed: null, child: Text("확인"))
                               ]),
                         );
                       }
-                    }, // 이벤트 기능을 공백으로 설정합니다.
-                    child: Text(
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color(0xFF2E5A9C), // 버튼 배경색을 설정합니다.
+                    ), // 이벤트 기능을 공백으로 설정합니다.
+                    child: const Text(
                       '확인',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -368,16 +375,13 @@ class signPage extends StatelessWidget {
                         letterSpacing: -0.39,
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      primary: Color(0xFF2E5A9C), // 버튼 배경색을 설정합니다.
-                    ),
                   ),
                 ),
               ),
               Positioned(
                 left: 25,
                 top: containerHeight * 0.425,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 246,
                   height: 23,
                   child: Text(
@@ -401,19 +405,19 @@ class signPage extends StatelessWidget {
                 child: Material(
                   // Material 위젯 추가
                   type: MaterialType.transparency,
-                  child: Container(
+                  child: SizedBox(
                     width: containerWidth * 0.88,
                     height: 49,
                     child: TextField(
                       obscureText: true,
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                       controller:
                           _passController, // 해당 입력창에 TextEditingController 연결
                       decoration: InputDecoration(
                         hintText: " 비밀번호",
-                        hintStyle: TextStyle(color: Colors.grey),
+                        hintStyle: const TextStyle(color: Colors.grey),
                         filled: true,
-                        fillColor: Color(0x192E5A9C),
+                        fillColor: const Color(0x192E5A9C),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide.none,
@@ -433,19 +437,19 @@ class signPage extends StatelessWidget {
                 child: Material(
                   // Material 위젯 추가
                   type: MaterialType.transparency,
-                  child: Container(
+                  child: SizedBox(
                     width: containerWidth * 0.88,
                     height: 49,
                     child: TextField(
                       obscureText: true,
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                       controller:
                           _pass2Controller, // 해당 입력창에 TextEditingController 연결
                       decoration: InputDecoration(
                         filled: true,
                         hintText: " 비밀번호 재입력",
-                        hintStyle: TextStyle(color: Colors.grey),
-                        fillColor: Color(0x192E5A9C),
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        fillColor: const Color(0x192E5A9C),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide.none,
@@ -473,8 +477,8 @@ class signPage extends StatelessWidget {
                       final String displayText =
                           isLengthValid ? '통과' : '6자리 이상 입력해 주세요';
                       final Color textColor = isLengthValid
-                          ? Color(0xFF00FF00) // 초록색으로 변경하세요.
-                          : Color(0xFFF16E6E);
+                          ? const Color(0xFF00FF00) // 초록색으로 변경하세요.
+                          : const Color(0xFFF16E6E);
 
                       return Text(
                         displayText,
@@ -496,7 +500,7 @@ class signPage extends StatelessWidget {
               Positioned(
                 left: 25,
                 top: containerHeight * 0.7,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 246,
                   height: 23,
                   child: Text(
@@ -522,7 +526,7 @@ class signPage extends StatelessWidget {
                   child: TextButton(
                     onPressed: () {
                       String memo = checkInconsistency();
-                      print('asdfasdfsdffffffasdfasdfasd' + memo);
+                      print('asdfasdfsdffffffasdfasdfasd$memo');
                       if (memo == '202') {
                         signUpAndHandleResponse(
                             _nameController.text, _passController.text);
@@ -534,14 +538,14 @@ class signPage extends StatelessWidget {
                             isSuccess = inconsistency == null;
 
                             return AlertDialog(
-                              title: Text('가입 실패11'),
+                              title: const Text('가입 실패11'),
                               content: Text('오류: $inconsistency'),
                               actions: [
                                 TextButton(
                                   onPressed: () {
                                     Navigator.pop(context);
                                   },
-                                  child: Text('확인'),
+                                  child: const Text('확인'),
                                 ),
                               ],
                             );
@@ -550,11 +554,11 @@ class signPage extends StatelessWidget {
                       }
                     }, // 공백 이벤트로 설정
                     style: TextButton.styleFrom(
-                      backgroundColor: Color(0xFF2E5A9C),
+                      backgroundColor: const Color(0xFF2E5A9C),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       padding: EdgeInsets.zero,
                     ),
-                    child: Text(
+                    child: const Text(
                       '가입하기',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -576,16 +580,16 @@ class signPage extends StatelessWidget {
                 child: Material(
                   // Material 위젯 추가
                   type: MaterialType.transparency,
-                  child: Container(
+                  child: SizedBox(
                     width: containerWidth * 0.88,
                     height: 49,
                     child: TextField(
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                       controller:
                           _nameController, // 해당 입력창에 TextEditingController 연결
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Color(0x192E5A9C),
+                        fillColor: const Color(0x192E5A9C),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide.none,

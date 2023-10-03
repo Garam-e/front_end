@@ -21,7 +21,7 @@ class _PasswordPageState extends State<resetPassword> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        iconTheme: IconThemeData(
+        iconTheme: const IconThemeData(
           color: Colors.black,
         ),
         centerTitle: true,
@@ -32,7 +32,7 @@ class _PasswordPageState extends State<resetPassword> {
       body: Stack(
         alignment: Alignment.topLeft,
         children: [
-          Positioned(
+          const Positioned(
             top: 100,
             left: 20, // 왼쪽 여분 추가
             child: Text(
@@ -45,7 +45,7 @@ class _PasswordPageState extends State<resetPassword> {
               ),
             ),
           ),
-          Positioned(
+          const Positioned(
             top: 150,
             left: 20, // 왼쪽 여분 추가
             child: Text(
@@ -61,9 +61,9 @@ class _PasswordPageState extends State<resetPassword> {
           Positioned(
             top: 180,
             left: 20,
-            child: Container(
+            child: SizedBox(
               width: buttonWidth * 1.105,
-              child: TextField(
+              child: const TextField(
                 decoration: InputDecoration(
                   labelText: '이메일',
                   labelStyle: TextStyle(color: Colors.grey),
@@ -90,9 +90,9 @@ class _PasswordPageState extends State<resetPassword> {
           Positioned(
             top: 200, // 적절한 위치로 조정
             right: buttonWidth * 0.32,
-            child: Container(
+            child: SizedBox(
               width: buttonWidth * 0.3,
-              child: Text(
+              child: const Text(
                 '@gachon.ac.kr', // 버튼 텍스트
                 style: TextStyle(color: Color(0xFF888888)),
               ),
@@ -101,18 +101,18 @@ class _PasswordPageState extends State<resetPassword> {
           Positioned(
             top: 185, // 적절한 위치로 조정
             right: buttonWidth * 0.08,
-            child: Container(
+            child: SizedBox(
               width: buttonWidth * 0.25,
               child: ElevatedButton(
                 onPressed: () {
                   // 인증 요청 로직을 추가하세요
                 },
-                child: Text(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2F5B9C), // 버튼의 배경색
+                ),
+                child: const Text(
                   '인증요청', // 버튼 텍스트
                   style: TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  primary: Color(0xFF2F5B9C), // 버튼의 배경색
                 ),
               ),
             ),
@@ -120,9 +120,9 @@ class _PasswordPageState extends State<resetPassword> {
           Positioned(
             top: 250,
             left: 20,
-            child: Container(
+            child: SizedBox(
               width: buttonWidth * 1.105,
-              child: TextField(
+              child: const TextField(
                 decoration: InputDecoration(
                   labelText: '인증번호',
                   labelStyle: TextStyle(color: Colors.grey),
@@ -149,23 +149,23 @@ class _PasswordPageState extends State<resetPassword> {
           Positioned(
             top: 255, // 적절한 위치로 조정
             right: buttonWidth * 0.08,
-            child: Container(
+            child: SizedBox(
               width: buttonWidth * 0.2,
               child: ElevatedButton(
                 onPressed: () {
                   // 인증 요청 로직을 추가하세요
                 },
-                child: Text(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2F5B9C), // 버튼의 배경색
+                ),
+                child: const Text(
                   '확인', // 버튼 텍스트
                   style: TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  primary: Color(0xFF2F5B9C), // 버튼의 배경색
                 ),
               ),
             ),
           ),
-          Positioned(
+          const Positioned(
             top: 350,
             left: 20, // 왼쪽 여분 추가
             child: Text(
@@ -181,7 +181,7 @@ class _PasswordPageState extends State<resetPassword> {
           Positioned(
             top: 380,
             left: 20,
-            child: Container(
+            child: SizedBox(
               width: buttonWidth * 1.105,
               child: TextField(
                 onChanged: (value) {
@@ -195,18 +195,18 @@ class _PasswordPageState extends State<resetPassword> {
                 },
                 decoration: InputDecoration(
                   labelText: '6자리 이상',
-                  labelStyle: TextStyle(color: Colors.grey),
+                  labelStyle: const TextStyle(color: Colors.grey),
                   filled: true,
-                  fillColor: Color(0xFFEAEFF5),
-                  enabledBorder: OutlineInputBorder(
+                  fillColor: const Color(0xFFEAEFF5),
+                  enabledBorder: const OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
                   ),
-                  focusedBorder: OutlineInputBorder(
+                  focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
                   ),
                   errorText: !isPasswordValid ? '' : null,
                 ),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.normal,
                   color: Color(0xFF888888),
@@ -218,7 +218,7 @@ class _PasswordPageState extends State<resetPassword> {
           Positioned(
             top: 450,
             left: 20,
-            child: Container(
+            child: SizedBox(
               width: buttonWidth * 1.105,
               child: TextField(
                 onChanged: (value) {
@@ -234,18 +234,18 @@ class _PasswordPageState extends State<resetPassword> {
                 },
                 decoration: InputDecoration(
                   labelText: '비밀번호 재입력',
-                  labelStyle: TextStyle(color: Colors.grey),
+                  labelStyle: const TextStyle(color: Colors.grey),
                   filled: true,
-                  fillColor: Color(0xFFEAEFF5),
-                  enabledBorder: OutlineInputBorder(
+                  fillColor: const Color(0xFFEAEFF5),
+                  enabledBorder: const OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
                   ),
-                  focusedBorder: OutlineInputBorder(
+                  focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
                   ),
                   errorText: !isPasswordValid ? '' : null,
                 ),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.normal,
                   color: Color(0xFF888888),
@@ -266,8 +266,8 @@ class _PasswordPageState extends State<resetPassword> {
                     height: 16,
                     color: Colors.red,
                   ),
-                  SizedBox(width: 5),
-                  Text(
+                  const SizedBox(width: 5),
+                  const Text(
                     '비밀번호를 6자 이상 입력해주세요',
                     style: TextStyle(
                       color: Colors.red,
@@ -282,7 +282,7 @@ class _PasswordPageState extends State<resetPassword> {
           Positioned(
             top: 580,
             left: 20,
-            child: Container(
+            child: SizedBox(
               width: buttonWidth * 1.1,
               height: 46,
               child: ElevatedButton(
@@ -290,10 +290,10 @@ class _PasswordPageState extends State<resetPassword> {
                   // TODO: 비밀번호 재설정 로직 추가
                 },
                 style: ElevatedButton.styleFrom(
-                  primary: Color(0xFF2F5B9C),
-                  side: BorderSide(color: Colors.white),
+                  backgroundColor: const Color(0xFF2F5B9C),
+                  side: const BorderSide(color: Colors.white),
                 ),
-                child: Text(
+                child: const Text(
                   '재설정하기',
                   style: TextStyle(
                     color: Colors.white,

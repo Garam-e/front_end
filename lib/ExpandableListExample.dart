@@ -3,7 +3,6 @@
 // lists.dart 파일 import
 import 'package:flutter/material.dart';
 import 'lists.dart';
-import 'main.dart';
 
 class ExpandableListExample extends StatefulWidget {
   final Function onExpand;
@@ -11,7 +10,7 @@ class ExpandableListExample extends StatefulWidget {
 
   final Function(String, bool, {int box}) onSendMessage;
   ExpandableListExample(
-      {required this.onExpand,
+      {super.key, required this.onExpand,
       required this.listTitle,
       required this.onSendMessage});
 
@@ -21,7 +20,7 @@ class ExpandableListExample extends StatefulWidget {
 
 class _ExpandableListExampleState extends State<ExpandableListExample> {
   bool _isExpanded = false;
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
   void _toggleExpand() {
     setState(() {
@@ -46,7 +45,7 @@ class _ExpandableListExampleState extends State<ExpandableListExample> {
           ExpansionPanel(
             headerBuilder: (BuildContext context, bool isExpanded) {
               return Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Color.fromARGB(
                       255, 235, 237, 238), // 버튼의 색상을 #989898로 설정했습니다.
                   borderRadius: BorderRadius.only(
@@ -57,7 +56,7 @@ class _ExpandableListExampleState extends State<ExpandableListExample> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     '    ${widget.listTitle}', // 여기에 버튼 안의 텍스트를 입력하세요.
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14, // 여기에 텍스트 크기를 설정하세요.
                       color: Color(0xFF989898), // 여기에 텍스트 색상을 설정하세요.
                       fontWeight: FontWeight.bold,
@@ -69,8 +68,8 @@ class _ExpandableListExampleState extends State<ExpandableListExample> {
             // 나머지 코드 생략
             body: Scrollbar(
               controller: _scrollController,
-              isAlwaysShown: true,
-              child: Container(
+              thumbVisibility: true,
+              child: SizedBox(
                 height: screenHeight * 0.2,
                 child: ListView.builder(
                   shrinkWrap: true,
@@ -80,7 +79,7 @@ class _ExpandableListExampleState extends State<ExpandableListExample> {
                       ? topQuestionsList.length // lists.dart 파일에서 가져온 리스트 사용
                       : theSelectionList.length, // lists.dart 파일에서 가져온 리스트 사용
                   itemBuilder: (BuildContext context, int index) {
-                    return Container(
+                    return SizedBox(
                       height: screenHeight * 0.05,
                       child: TextButton(
                         onPressed: () {
@@ -98,7 +97,7 @@ class _ExpandableListExampleState extends State<ExpandableListExample> {
                           }
                         },
                         style: TextButton.styleFrom(
-                          primary: Colors.black, // 원하는 색상으로 변경하세요.
+                          foregroundColor: Colors.black, // 원하는 색상으로 변경하세요.
                         ),
                         child: Align(
                           alignment: Alignment.centerLeft,

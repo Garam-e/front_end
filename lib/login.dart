@@ -3,13 +3,15 @@ import 'sign.dart' as sign;
 import 'reset_password.dart';
 
 class loginPage extends StatelessWidget {
-  TextEditingController _firstTextEditingController = TextEditingController();
-  TextEditingController _secondTextEditingController = TextEditingController();
+  final TextEditingController _firstTextEditingController = TextEditingController();
+  final TextEditingController _secondTextEditingController = TextEditingController();
+
+  loginPage({super.key});
   Route _customPageRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => child,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        var begin = Offset(1.0, 0.0);
+        var begin = const Offset(1.0, 0.0);
         var end = Offset.zero;
         var curve = Curves.ease;
 
@@ -37,7 +39,7 @@ class loginPage extends StatelessWidget {
           width: containerWidth,
           height: containerHeight,
           clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(color: Colors.white),
+          decoration: const BoxDecoration(color: Colors.white),
           child: Stack(
             children: [
               Positioned(
@@ -47,7 +49,7 @@ class loginPage extends StatelessWidget {
                   onTap: () {
                     Navigator.pop(context);
                   },
-                  child: Container(
+                  child: SizedBox(
                     width: 40,
                     height: 31,
                     child: Stack(
@@ -58,7 +60,7 @@ class loginPage extends StatelessWidget {
                           child: Container(
                             width: 40,
                             height: 31,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               image: DecorationImage(
                                 image: AssetImage("assets/back.png"),
                               ),
@@ -76,16 +78,16 @@ class loginPage extends StatelessWidget {
                 child: Material(
                   // Material 위젯 추가
                   type: MaterialType.transparency,
-                  child: Container(
+                  child: SizedBox(
                     width: containerWidth * 0.88,
                     height: 49,
                     child: TextField(
-                      style: TextStyle(color: Colors.black),
+                      style: const TextStyle(color: Colors.black),
                       controller:
                           _firstTextEditingController, // 해당 입력창에 TextEditingController 연결
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Color(0x192E5A9C),
+                        fillColor: const Color(0x192E5A9C),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide.none,
@@ -102,7 +104,7 @@ class loginPage extends StatelessWidget {
               Positioned(
                 left: containerWidth * 0.71,
                 top: 202,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 90,
                   height: 23,
                   child: Text(
@@ -125,7 +127,7 @@ class loginPage extends StatelessWidget {
                 child: Material(
                   // Material 위젯 추가
                   type: MaterialType.transparency,
-                  child: Container(
+                  child: SizedBox(
                     width: containerWidth * 0.88,
                     height: 49,
                     child: TextField(
@@ -133,7 +135,7 @@ class loginPage extends StatelessWidget {
                           _secondTextEditingController, // 해당 입력창에 TextEditingController 연결
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Color(0x192E5A9C),
+                        fillColor: const Color(0x192E5A9C),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(5),
                           borderSide: BorderSide.none,
@@ -143,13 +145,13 @@ class loginPage extends StatelessWidget {
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      style: TextStyle(color: Colors.black), // 글자색을 검은색으로 변경
+                      style: const TextStyle(color: Colors.black), // 글자색을 검은색으로 변경
                       obscureText: true,
                     ),
                   ),
                 ),
               ),
-              Positioned(
+              const Positioned(
                 left: 25,
                 top: 118,
                 child: SizedBox(
@@ -169,7 +171,7 @@ class loginPage extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
+              const Positioned(
                 left: 31,
                 top: 166,
                 child: SizedBox(
@@ -188,7 +190,7 @@ class loginPage extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
+              const Positioned(
                 left: 31,
                 top: 254,
                 child: SizedBox(
@@ -223,9 +225,9 @@ class loginPage extends StatelessWidget {
                     }, // 기능을 공백으로 변경
                     style: ButtonStyle(
                       backgroundColor:
-                          MaterialStateProperty.all(Color(0xFF00428B)),
+                          MaterialStateProperty.all(const Color(0xFF00428B)),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Login',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -252,7 +254,10 @@ class loginPage extends StatelessWidget {
                         _customPageRoute(sign.signPage()),
                       );
                     },
-                    child: Text(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white, padding: const EdgeInsets.all(0),
+                    ),
+                    child: const Text(
                       '회원가입',
                       style: TextStyle(
                         color: Color(0xFF2E5A9C),
@@ -262,10 +267,6 @@ class loginPage extends StatelessWidget {
                         height: 2,
                         letterSpacing: -0.34,
                       ),
-                    ),
-                    style: TextButton.styleFrom(
-                      primary: Colors.white,
-                      padding: EdgeInsets.all(0),
                     ),
                   ),
                 ),
@@ -281,10 +282,13 @@ class loginPage extends StatelessWidget {
                       // 여기에 버튼 클릭 시 실행할 코드 작성
 
                       Navigator.of(context).push(
-                        _customPageRoute(resetPassword()),
+                        _customPageRoute(const resetPassword()),
                       );
                     },
-                    child: Text(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero, // 버튼 내부 패딩을 0으로 설정
+                    ),
+                    child: const Text(
                       '비밀번호 찾기  |',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -296,13 +300,10 @@ class loginPage extends StatelessWidget {
                         letterSpacing: -0.34,
                       ),
                     ),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero, // 버튼 내부 패딩을 0으로 설정
-                    ),
                   ),
                 ),
               ),
-              Positioned(
+              const Positioned(
                 left: 31,
                 top: 420,
                 child: Text(
