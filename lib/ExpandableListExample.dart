@@ -39,6 +39,7 @@ class _ExpandableListExampleState extends State<ExpandableListExample> {
       widthFactor: 1,
       child: ExpansionPanelList(
         elevation: 1,
+        expandedHeaderPadding: EdgeInsets.all(0),
         expansionCallback: (int index, bool isExpanded) {
           _toggleExpand();
         },
@@ -46,11 +47,12 @@ class _ExpandableListExampleState extends State<ExpandableListExample> {
           ExpansionPanel(
             headerBuilder: (BuildContext context, bool isExpanded) {
               return Container(
+                height: 0,
                 decoration: BoxDecoration(
                   color: Color.fromARGB(
                       255, 235, 237, 238), // 버튼의 색상을 #989898로 설정했습니다.
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30), // 왼쪽 상단 모서리를 둥글게 만들었습니다.
+                    topLeft: Radius.circular(25), // 왼쪽 상단 모서리를 둥글게 만들었습니다.
                   ),
                 ),
                 child: Align(
@@ -71,7 +73,7 @@ class _ExpandableListExampleState extends State<ExpandableListExample> {
               controller: _scrollController,
               isAlwaysShown: true,
               child: Container(
-                height: screenHeight * 0.2,
+                height: screenHeight * 0.23,
                 child: ListView.builder(
                   shrinkWrap: true,
                   padding: EdgeInsets.zero,

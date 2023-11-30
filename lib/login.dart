@@ -1,10 +1,107 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'sign.dart' as sign;
 import 'reset_password.dart';
+import 'serverFunction.dart';
+import 'main.dart' as main;
+import 'setting.dart';
 
-class loginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+bool _loginState = false;
+
+String _accessToken = '';
+
+String _refreshToken = '';
+
+class _LoginPageState extends State<LoginPage> {
+  bool _isSwitched = false;
   TextEditingController _firstTextEditingController = TextEditingController();
   TextEditingController _secondTextEditingController = TextEditingController();
+  void handleLogin(String id, String password) async {
+    // 로그인 처리 로직 구현
+    // API 요청 보내기, 응답 받기 등
+
+    // 예시: API 요청 보내고 응답 처리
+    try {
+      LoginResponse loginResponse = await sendLogin(id, password);
+      bool isSuccess = loginResponse.isSuccess;
+      String accessToken = loginResponse.accessToken;
+      String refreshToken = loginResponse.refreshToken;
+
+      _loginState = isSuccess;
+      _refreshToken = refreshToken;
+      _accessToken = accessToken;
+
+      // 응답 처리 로직 작성
+      if (isSuccess) {
+        // 로그인 성공
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('로그인 성공'),
+              content: Text('로그인에 성공했습니다.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // 알림창 닫기
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
+                  child: Text('확인'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        // 로그인 실패
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('로그인 실패'),
+              content: Text('로그인에 실패했습니다.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    // 필요한 동작 수행
+                    Navigator.of(context).pop(); // 알림창 닫기
+                  },
+                  child: Text('확인'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
+      // 예외 처리
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('에러'),
+            content: Text('로그인 중에 오류가 발생했습니다.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  // 필요한 동작 수행
+                  Navigator.of(context).pop(); // 알림창 닫기
+                },
+                child: Text('확인'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
   Route _customPageRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => child,
@@ -31,6 +128,8 @@ class loginPage extends StatelessWidget {
 
     final double containerHeight = screenHeight;
     final double containerWidth = screenWidth;
+    var mainProvider = context.read<main.MainProvider>();
+
     return Column(
       children: [
         Container(
@@ -210,16 +309,20 @@ class loginPage extends StatelessWidget {
               ),
               Positioned(
                 left: containerWidth * 0.063,
-                top: 360,
+                top: 355,
                 child: SizedBox(
                   width: containerWidth * 0.88,
-                  height: 43,
+                  height: 50,
                   child: ElevatedButton(
                     onPressed: () {
-                      var ID = _firstTextEditingController.text;
-                      print(ID);
-                      var password = _secondTextEditingController.text;
-                      print(password);
+                      String ID = _firstTextEditingController.text;
+                      ID = ID + '@gachon.ac.kr';
+                      String password = _secondTextEditingController.text;
+
+                      handleLogin(ID, password);
+                      mainProvider.setLogin(_loginState);
+                      mainProvider.setAToken(_accessToken);
+                      mainProvider.setRToken(_refreshToken);
                     }, // 기능을 공백으로 변경
                     style: ButtonStyle(
                       backgroundColor:
@@ -230,7 +333,7 @@ class loginPage extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 17,
+                        fontSize: 20,
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w500,
                         height: 1.53,
@@ -303,22 +406,40 @@ class loginPage extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: 31,
-                top: 420,
-                child: Text(
-                  '자동 로그인',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFF2E5A9C),
-                    fontSize: 13,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    height: 2,
-                    letterSpacing: -0.34,
-                    decoration: TextDecoration.none,
-                  ),
-                ),
-              ),
+                  left: 31,
+                  top: 414,
+                  child: Row(
+                    children: [
+                      Text(
+                        '자동 로그인',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Color(0xFF2E5A9C),
+                          fontSize: 13,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w500,
+                          height: 2,
+                          letterSpacing: -0.34,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+
+                      SizedBox(width: 3), // 여기서 간격을 조정합니다.
+
+                      Transform.scale(
+                          scale: 0.6, // 여기서 버튼의 크기를 조정합니다.
+                          child: CupertinoSwitch(
+                            value: _isSwitched,
+                            onChanged: (value) {
+                              setState(() {
+                                _isSwitched = value;
+                              });
+                            },
+                            activeColor:
+                                Color(0xFF2E5A9C), // 여기서 버튼의 색상을 조정합니다.
+                          ))
+                    ],
+                  )),
             ],
           ),
         ),

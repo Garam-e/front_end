@@ -5,69 +5,43 @@ import 'menu.dart' as menu;
 import 'setting.dart';
 import 'reset_password.dart';
 import './ExpandableListExample.dart';
+import './classExample.dart';
 import 'package:http/http.dart' as http;
 import 'lists.dart';
 import 'package:share/share.dart';
+import 'package:flutter/services.dart';
+import './BottomSheetMenu.dart';
 //import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() {
-  runApp(
-    ChangeNotifierProvider(
-      // ChangeNotifierProvider 사용
-      create: (context) => SelectionProvider(),
-      child: MyApp(),
-    ),
-  );
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider<SelectionProvider>(
+        create: (_) => SelectionProvider(),
+      ),
+      ChangeNotifierProvider<MainProvider>(
+        create: (_) => MainProvider(),
+      ),
+      ChangeNotifierProvider<ListProvider>(
+        create: (_) => ListProvider(),
+      ),
+    ],
+    child: MyApp(),
+  ));
 }
-
-final List<String> enterList = [
-  'apple',
-  'banana',
-  'cherry',
-  'durian',
-];
-
-// 입력창 위에 보여줄 자동완성 목록
-
-String listTitle = '실시간 TOP 질문';
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: ChatScreen(),
+      home: _MyApp(),
     );
   }
 }
 
-class ChatScreen extends StatefulWidget {
-  @override
-  _ChatScreenState createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
-  bool _isStarSelected = false;
-  bool showAutocompleteButton = false;
-  String _selectedLanguage = 'KOR';
-  List<Message> _messages = [];
+class _MyApp extends StatelessWidget {
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
-  void initState() {
-    super.initState();
-    // 초기 메시지 설정
-    _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0));
-    _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9));
-  }
-
-  void _sendMessage(String text, bool isLeft, {int box = 0}) {
-    setState(() {
-      _messages.add(Message(text, isLeft, box));
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
-  }
-
   void _scrollToBottom() {
     _scrollController.animateTo(
       _scrollController.position.maxScrollExtent,
@@ -76,44 +50,30 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _toggleStar() {
-    setState(() {
-      _isStarSelected = !_isStarSelected;
-    });
-  }
-
-  String _getListTitle() {
-    return _isStarSelected ? '즐겨찾기' : '실시간 TOP 질문';
-  }
-
-  void _setSelectedLanguage(String language) {
-    setState(() {
-      _selectedLanguage = language;
-    });
-  }
-
-  bool loginState = false;
-
-  Widget _buildMessageItem(Message message) {
+  Widget _buildMessageItem(BuildContext context, Message message) {
     Color _unselectedTextColor = Colors.black;
     Color _selectedTextColor = Colors.white;
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5.0),
+      padding: EdgeInsets.symmetric(vertical: 0.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment:
             message.isLeft ? MainAxisAlignment.start : MainAxisAlignment.end,
         children: [
-          if (message.isLeft)
+          if (message.isLeft && message.showUserNameAndPhoto ?? false)
             Padding(
-              padding: const EdgeInsets.only(right: 8.0),
+              padding: message.text == "안녕하세요! 채팅에 오신 것을 환영합니다."
+                  ? const EdgeInsets.only(right: 8.0, top: 12)
+                  : const EdgeInsets.only(
+                      right: 8.0,
+                    ),
               child: Container(
                 margin: EdgeInsets.only(left: 8.0),
                 width: 38,
                 height: 38,
                 decoration: ShapeDecoration(
                   image: DecorationImage(
-                    image: AssetImage("assets/mark.png"),
+                    image: AssetImage("assets/garam-E.png"),
                     fit: BoxFit.fill,
                   ),
                   shape: RoundedRectangleBorder(
@@ -123,26 +83,47 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             )
+          else if (message.isLeft)
+            Padding(
+              padding: const EdgeInsets.only(
+                right: 8.0,
+              ),
+              child: Container(
+                margin: EdgeInsets.only(left: 8.0),
+                width: 38,
+                height: 38,
+              ),
+            )
           else
             Padding(
-              padding: const EdgeInsets.only(right: 1, top: 8),
+              padding: const EdgeInsets.only(right: 1),
               child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    if (theSelectionList.contains(message.text)) {
-                      theSelectionList.remove(message.text);
+                  {
+                    if (context
+                        .read<ListProvider>()
+                        .theSelectionList
+                        .contains(message.text)) {
+                      context
+                          .read<ListProvider>()
+                          .SelectionRemoveString(message.text.toString());
                     } else {
-                      theSelectionList.add(message.text);
+                      context
+                          .read<ListProvider>()
+                          .SelectionAddString(message.text.toString());
                     }
-                  });
+                  }
                 },
                 child: Container(
-                  margin: EdgeInsets.only(right: 8.0),
+                  margin: EdgeInsets.only(right: 8.0, top: 0),
                   width: 25,
                   height: 25,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage(theSelectionList.contains(message.text)
+                      image: AssetImage(context
+                              .watch<ListProvider>()
+                              .theSelectionList
+                              .contains(message.text)
                           ? "assets/star2.png"
                           : "assets/star.png"),
                       fit: BoxFit.fill,
@@ -152,94 +133,127 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           Flexible(
-            child: Column(
-              crossAxisAlignment: message.isLeft
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.end,
-              children: [
-                if (message.isLeft)
-                  Text(
-                    "가람이",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                Container(
-                  constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.7),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFECF4FF),
-                    borderRadius: BorderRadius.only(
-                      topRight: const Radius.circular(10),
-                      bottomLeft: const Radius.circular(10),
-                      bottomRight: const Radius.circular(10),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+            child: Transform.translate(
+              offset: Offset(
+                  0,
+                  message.showUserNameAndPhoto ?? false
+                      ? message.showUserNameAndPhoto ?? false
+                          ? message.text == "안녕하세요! 채팅에 오신 것을 환영합니다."
+                              ? -10
+                              : message.isLeft
+                                  ? -25
+                                  : -18
+                          : 0
+                      : -40),
+              child: Container(
+                margin: message.text == "안녕하세요! 채팅에 오신 것을 환영합니다."
+                    ? message.box == 0
+                        ? EdgeInsets.only(right: 8.0, bottom: 6)
+                        : EdgeInsets.only(right: 8.0, bottom: 0)
+                    : message.isLeft
+                        ? EdgeInsets.only(right: 8.0, bottom: 0)
+                        : EdgeInsets.only(right: 8.0, bottom: 10),
+                child: Column(
+                  crossAxisAlignment: message.isLeft
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.end,
+                  children: [
+                    if (message.isLeft)
                       Text(
-                        message.text,
-                        style: TextStyle(
-                          color: Colors.black,
-                        ),
+                        message.showUserNameAndPhoto ?? false ? "가람이" : "",
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 8.0),
-                      Wrap(
-                        spacing: 8.0,
-                        runSpacing: 8.0,
-                        children: List.generate(
-                          message.box,
-                          (index) => GestureDetector(
-                            onTap: () {
-                              // 버튼 클릭 이벤트 처리
-                              //print('버튼 $index 클릭됨');
-                              setState(() {
-                                _messages
-                                    .add(Message("버튼 $index 클릭됨", true, 0));
-                              });
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                _scrollController.animateTo(
-                                  _scrollController
-                                      .position.maxScrollExtent, // 맨 밑으로 이동
-                                  duration: Duration(milliseconds: 200),
-                                  curve: Curves.easeInOut,
-                                );
-                              });
-                              //우선 임의로 처리 후에 안에 있는 텍스트 내용을 바탕으로 서버에서 데이터 받아오기
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                                vertical: 8.0,
+                    Container(
+                      constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.7),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECF4FF),
+                        borderRadius: message.isLeft
+                            ? BorderRadius.only(
+                                topRight: const Radius.circular(10),
+                                bottomLeft: const Radius.circular(10),
+                                bottomRight: const Radius.circular(10),
+                              )
+                            : BorderRadius.only(
+                                topLeft: const Radius.circular(
+                                    10), // topRight을 topLeft로 변경
+                                bottomLeft: const Radius.circular(10),
+                                bottomRight: const Radius.circular(10),
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '버튼 $index',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                ),
-                              ),
-                              height: 45, // 높이 45
-                              width: 78, // 가로 88
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            message.text,
+                            style: TextStyle(
+                              color: Colors.black,
                             ),
                           ),
-                        ),
+                          if (message.box != 0) SizedBox(height: 8.0),
+                          Wrap(
+                            spacing: 8.0,
+                            runSpacing: 8.0,
+                            children: List.generate(
+                              message.box,
+                              (index) => GestureDetector(
+                                onTap: () {
+                                  // 버튼 클릭 이벤트 처리
+                                  //print('버튼 $index 클릭됨');
+                                  context.read<MainProvider>().addMessage(
+                                      Message("버튼 $index 클릭됨", true, 0));
+
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    _scrollController.animateTo(
+                                      _scrollController
+                                          .position.maxScrollExtent, // 맨 밑으로 이동
+                                      duration: Duration(milliseconds: 200),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  });
+                                  //우선 임의로 처리 후에 안에 있는 텍스트 내용을 바탕으로 서버에서 데이터 받아오기
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12.0,
+                                    vertical: 8.0,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '버튼 $index',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  height: 45, // 높이 45
+                                  width: 78, // 가로 88
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 4.0),
+                    Text(
+                      message.createdAt != null
+                          ? (message.showTimestampAndShareIcon
+                              ? message.getCreatedAtString()
+                              : "")
+                          : '',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 4.0),
-                Text(
-                  message.createdAt != null ? message.getCreatedAtString() : '',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
+              ),
             ),
           ),
-          if (message.isLeft)
+          if (message.isLeft && message.showUserNameAndPhoto ?? false)
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: GestureDetector(
@@ -249,7 +263,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   // 예를 들어, 터치 시 어떤 동작을 수행하거나 화면을 변경하는 등의 로직을 추가할 수 있습니다.
                 },
                 child: Container(
-                  margin: EdgeInsets.only(left: 8.0, top: 25),
+                  margin: message.text == "안녕하세요! 채팅에 오신 것을 환영합니다."
+                      ? EdgeInsets.only(left: 1.0, top: 22)
+                      : EdgeInsets.only(left: 1.0, top: 10),
                   width: 20,
                   height: 20,
                   decoration: ShapeDecoration(
@@ -275,638 +291,710 @@ class _ChatScreenState extends State<ChatScreen> {
     final double containerHeight = screenHeight;
     final double containerWidth = screenWidth;
 
+    context.read<MainProvider>().startInitState();
     return Scaffold(
-      body: SizedBox.expand(
-        child: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              top: containerHeight * 0.034,
-              child: Container(
-                width: containerWidth,
-                height: 55,
-                //상단바
-                decoration: BoxDecoration(color: Color(0xFF00428B)),
-              ),
-            ),
-            Positioned(
-              left: containerWidth * 0.28,
-              top: containerHeight * 0.034 + 2,
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage("assets/gachon_mark.png"),
-                    fit: BoxFit.fill,
+        resizeToAvoidBottomInset: true,
+        body: SingleChildScrollView(
+            child: Column(children: [
+          Container(
+              width: containerWidth,
+              height: containerHeight,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(color: Colors.white),
+              child: Stack(children: [
+                Positioned(
+                  left: 0,
+                  top: containerHeight * 0.034,
+                  child: Container(
+                    width: containerWidth,
+                    height: 55,
+                    //상단바
+                    decoration: BoxDecoration(color: Color(0xFF00428B)),
                   ),
                 ),
-              ),
-            ),
-            Positioned(
-              left: containerWidth * 0.38,
-              top: containerHeight * 0.034 + 13,
-              child: SizedBox(
-                width: 109,
-                height: 29,
-                child: Text(
-                  "가천대학교",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                    height: 1.30,
-                    letterSpacing: -0.52,
+                Positioned(
+                  left: containerWidth * 0.28,
+                  top: containerHeight * 0.034 + 2,
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage("assets/gachon_mark.png"),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            Container(
-              margin: EdgeInsets.only(
-                  top: containerHeight * 0.053, left: containerWidth * 0.04),
-              child: GestureDetector(
-                onTap: () {
-                  final RenderBox renderBox =
-                      context.findRenderObject() as RenderBox;
-                  final menuPosition = renderBox.localToGlobal(Offset.zero);
+                Positioned(
+                  left: containerWidth * 0.38,
+                  top: containerHeight * 0.034 + 13,
+                  child: SizedBox(
+                    width: 109,
+                    height: 29,
+                    child: Text(
+                      context.watch<MainProvider>().language == "KOR"
+                          ? "가천대학교"
+                          : "Gachon",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize:
+                            context.watch<MainProvider>().language == "KOR"
+                                ? 20
+                                : 25,
+                        fontFamily: 'Inter',
+                        fontWeight:
+                            context.watch<MainProvider>().language == "KOR"
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                        height: context.watch<MainProvider>().language == "KOR"
+                            ? 1.30
+                            : 0,
+                        letterSpacing: -0.52,
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.only(
+                      top: containerHeight * 0.053,
+                      left: containerWidth * 0.04),
+                  child: GestureDetector(
+                    onTap: () {
+                      final RenderBox renderBox =
+                          context.findRenderObject() as RenderBox;
+                      final menuPosition = renderBox.localToGlobal(Offset.zero);
 
-                  showMenu<String>(
-                    context: context,
-                    position: RelativeRect.fromLTRB(
-                      menuPosition.dx,
-                      menuPosition.dy + renderBox.size.height * 0.11,
-                      menuPosition.dx,
-                      menuPosition.dy,
-                    ),
-                    items: [
-                      PopupMenuItem<String>(
-                        child: Container(
-                          color: _selectedLanguage == 'KOR'
-                              ? Color(0xFFEDF4FF)
-                              : null,
-                          child: Text(
-                            'KOR',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 17,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w700,
-                              height: 1.53,
-                              letterSpacing: -0.44,
-                            ),
-                          ),
+                      showMenu<String>(
+                        context: context,
+                        position: RelativeRect.fromLTRB(
+                          menuPosition.dx,
+                          menuPosition.dy + renderBox.size.height * 0.11,
+                          menuPosition.dx,
+                          menuPosition.dy,
                         ),
-                        value: 'KOR',
-                      ),
-                      PopupMenuItem<String>(
-                        child: Container(
-                          color: _selectedLanguage == 'ENG'
-                              ? Color(0xFFEDF4FF)
-                              : null,
-                          child: Text(
-                            'ENG',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 17,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w700,
-                              height: 1.53,
-                              letterSpacing: -0.44,
-                            ),
-                          ),
-                        ),
-                        value: 'ENG',
-                      ),
-                      PopupMenuItem<String>(
-                        child: Container(
-                          color: _selectedLanguage == 'CHI'
-                              ? Color(0xFFEDF4FF)
-                              : null,
-                          child: Text(
-                            'CHI',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 17,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w700,
-                              height: 1.53,
-                              letterSpacing: -0.44,
-                            ),
-                          ),
-                        ),
-                        value: 'CHI',
-                      ),
-                    ],
-                    elevation: 16,
-                  ).then((value) {
-                    if (value != null) {
-                      _setSelectedLanguage(value);
-                    }
-                  });
-                },
-                child: Text(
-                  _selectedLanguage,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                    height: 1.53,
-                    letterSpacing: -0.44,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              // 메뉴바
-              left: containerWidth * 0.9,
-              top: containerHeight * 0.034 + 10,
-              child: GestureDetector(
-                // onTap: () {
-                //   Navigator.push(
-                //     context,
-                //     PageRouteBuilder(
-                //       pageBuilder: (context, animation, secondaryAnimation) =>
-                //           menu.menuPage(),
-                //       transitionsBuilder:
-                //           (context, animation, secondaryAnimation, child) {
-                //         const begin = Offset(1.0, 0.0);
-                //         const end = Offset.zero;
-                //         final tween = Tween(begin: begin, end: end);
-                //         final offsetAnimation = animation.drive(tween);
-
-                //         return SlideTransition(
-                //           position: offsetAnimation,
-                //           child: child,
-                //         );
-                //       },
-                //     ),
-                //   );
-                // },
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(15)),
-                    ),
-                    builder: (BuildContext context) {
-                      return Container(
-                        padding: EdgeInsets.all(20),
-                        height: 240,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Align(
-                              alignment: Alignment.center,
-                              child: Image.asset('assets/Line 34.png'),
-                            ),
-                            SizedBox(height: 45),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Column(
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => loginState
-                                                ? setting()
-                                                : menu.menuPage(),
-                                          ),
-                                        );
-                                      },
-                                      child: Container(
-                                        width: 62,
-                                        height: 62,
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFFEDF4FF),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.settings,
-                                          color: Color(0xFF2F5B9C),
-                                          size: 32,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 20),
-                                    Text(
-                                      '설정',
-                                      style: TextStyle(
-                                        color: Color(0xFF2F5B9C),
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        Navigator.push(
-                                          // TODO: 비밀번호 재설정 임시로 지정 추후에 FAQ 창으로 설정 예정
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                resetPassword(),
-                                          ),
-                                        );
-                                      },
-                                      child: Container(
-                                        width: 62,
-                                        height: 62,
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFFEDF4FF),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.help,
-                                          color: Color(0xFF2F5B9C),
-                                          size: 32,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 20),
-                                    Text(
-                                      'FAQ',
-                                      style: TextStyle(
-                                        color: Color(0xFF2F5B9C),
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        // TODO: 공지사항 페이지로 이동하는 코드 추가
-                                      },
-                                      child: Container(
-                                        width: 62,
-                                        height: 62,
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFFEDF4FF),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.notifications,
-                                          color: Color(0xFF2F5B9C),
-                                          size: 32,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 20),
-                                    Text(
-                                      '공지사항',
-                                      style: TextStyle(
-                                        color: Color(0xFF2F5B9C),
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                // 나머지 버튼들도 동일한 방식으로 구현
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-
-                child: Container(
-                  width: 35,
-                  height: 35,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        child: Container(
-                          width: 35,
-                          height: 35,
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage("assets/menu.png"),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: containerHeight * 0.034 + 54,
-              left: 0,
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height * 0.87,
-                color: Colors.white,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        itemCount: _messages.length,
-                        itemBuilder: (context, index) =>
-                            _buildMessageItem(_messages[index]),
-                      ),
-                    ),
-                    ExpandableListExample(
-                      onExpand: () {
-                        setState(() {});
-                      },
-                      listTitle: _getListTitle(),
-                      onSendMessage: _sendMessage,
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      color: Color(0xFFE2E4E5),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 30,
-                            height: 40,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 1),
-                              child: InkWell(
-                                onTap: () {
-                                  // 버튼이 눌렸을 때 수행할 작업을 여기에 작성하세요.
-                                  setState(() {
-                                    _messages.add(Message(
-                                        "안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0));
-                                    _messages.add(Message(
-                                        "안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9));
-                                  });
-                                  WidgetsBinding.instance
-                                      .addPostFrameCallback((_) {
-                                    _scrollController.animateTo(
-                                      _scrollController
-                                          .position.maxScrollExtent, // 맨 밑으로 이동
-                                      duration: Duration(milliseconds: 200),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  });
-                                },
-                                child: Image.asset('assets/home.png'),
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: containerWidth * 0.8,
-                            height: 30,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 1),
-                              child: TextField(
-                                controller: _controller,
+                        items: [
+                          PopupMenuItem<String>(
+                            child: Container(
+                              constraints: BoxConstraints(maxWidth: 120),
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              color:
+                                  context.read<MainProvider>().language == 'KOR'
+                                      ? Color(0xFFEDF4FF)
+                                      : null,
+                              child: Text(
+                                'KOR',
                                 style: TextStyle(
-                                  fontSize: 16,
                                   color: Colors.black,
+                                  fontSize: 17,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.53,
+                                  letterSpacing: -0.44,
                                 ),
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.symmetric(
-                                      vertical: 8.0, horizontal: 16.0),
-                                  hintText: "질문을 입력하세요",
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  fillColor: Colors.white,
-                                  filled: true,
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                    borderSide: BorderSide(
-                                        width: 0.8,
-                                        color: Color.fromARGB(255, 0, 0, 0)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                    borderSide: BorderSide(
-                                        width: 0.15, color: Color(0xFFBEBEBE)),
-                                  ),
-                                  suffixIcon: InkWell(
-                                    onTap: () {
-                                      if (_controller.text.isNotEmpty) {
-                                        _sendMessage(_controller.text, false);
-                                        _controller.clear();
-                                      }
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8),
-                                      child: Transform.translate(
-                                        offset: Offset(5,
-                                            0), // 원하는 xOffset 및 yOffset 값으로 변경합니다.
-                                        child: Icon(
-                                          Icons.send, // 원하는 아이콘으로 변경하세요.
-                                          color: const Color.fromARGB(
-                                              255, 1, 86, 156),
-                                          size: 24, // 원하는 크기로 변경하세요.
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                onChanged: (text) {
-                                  // 입력 값이 변경될 때 수행할 작업을 여기에 작성하세요.
-                                },
                               ),
                             ),
+                            value: 'KOR',
                           ),
-                          Row(
-                            children: [
-                              SizedBox(width: 8.0),
-                              InkWell(
-                                onTap: _toggleStar,
-                                child: AnimatedCrossFade(
-                                  duration: const Duration(milliseconds: 300),
-                                  firstChild: Transform.scale(
-                                    scale: _isStarSelected ? 1 : 1.1,
-                                    child: SizedBox(
-                                      width: 28,
-                                      height: 28,
-                                      child: Image.asset(
-                                        "assets/star.png",
-                                      ),
-                                    ),
-                                  ),
-                                  secondChild: Transform.scale(
-                                    scale: _isStarSelected ? 1.1 : 1,
-                                    child: SizedBox(
-                                      width: 28,
-                                      height: 28,
-                                      child: Image.asset(
-                                        "assets/star2.png",
-                                      ),
-                                    ),
-                                  ),
-                                  crossFadeState: _isStarSelected
-                                      ? CrossFadeState.showSecond
-                                      : CrossFadeState.showFirst,
+                          PopupMenuItem<String>(
+                            child: Container(
+                              constraints: BoxConstraints(maxWidth: 120),
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              color:
+                                  context.read<MainProvider>().language == 'ENG'
+                                      ? Color(0xFFEDF4FF)
+                                      : null,
+                              child: Text(
+                                'ENG',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 17,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.53,
+                                  letterSpacing: -0.44,
                                 ),
-                              )
-                            ],
+                              ),
+                            ),
+                            value: 'ENG',
+                          ),
+                        ],
+                        elevation: 16,
+                      ).then((value) {
+                        if (value != null) {
+                          context
+                              .read<MainProvider>()
+                              ._setSelectedLanguage(value);
+                          context.read<MainProvider>()._setListTitle();
+                        }
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        Text(
+                          context.watch<MainProvider>().language,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w700,
+                            height: 1.53,
+                            letterSpacing: -0.44,
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  // 메뉴바
+                  left: containerWidth * 0.9,
+                  top: containerHeight * 0.034 + 10,
+                  child: GestureDetector(
+                    onTap: () {
+                      BottomSheetMenu.show(
+                          context,
+                          context
+                              .read<MainProvider>()
+                              ._loginState); // loginState 값을 전달 로그인 시 true & 아닐 시 false
+                    },
+                    child: Container(
+                      width: 35,
+                      height: 35,
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            child: Container(
+                              width: 35,
+                              height: 35,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage("assets/menu.png"),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 하단바 코드
-  void _showBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.all(20),
-          height: 240,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Align(
-                alignment: Alignment.center,
-                child: Image.asset('assets/Line 34.png'),
-              ),
-              SizedBox(height: 45),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      Container(
-                        width: 62, // 버튼의 너비 조정
-                        height: 62, // 버튼의 높이 조정
-                        child: FloatingActionButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const setting()),
-                            );
-                          },
-                          backgroundColor: Color(0xFFEDF4FF),
-                          mini: false,
-                          heroTag: null,
-                          child: Image.asset('assets/settings.png'),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        '설정',
-                        style: TextStyle(
-                          color: Color(0xFF2F5B9C),
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
+                Positioned(
+                  top: containerHeight * 0.034 + 54,
+                  left: 0,
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: context.watch<MainProvider>().isExpanded
+                        ? containerHeight * 0.56
+                        : containerHeight * 0.8,
+                    color: Colors.white,
+                    child: ListView.builder(
+                        controller: _scrollController,
+                        itemCount:
+                            context.watch<MainProvider>().messages.length,
+                        itemBuilder: (context, index) {
+                          Message message =
+                              context.watch<MainProvider>().messages[index];
+                          return _buildMessageItem(context, message);
+                        }),
                   ),
-                  Column(
-                    children: [
-                      Container(
-                        width: 62, // 버튼의 너비 조정
-                        height: 62, // 버튼의 높이 조정
-                        child: FloatingActionButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const resetPassword()),
-                            );
-                          },
-                          backgroundColor: Color(0xFFEDF4FF),
-                          mini: false,
-                          heroTag: null,
-                          child: Image.asset('assets/campaign.png'),
+                ),
+                Positioned(
+                  top: context.watch<MainProvider>().isExpanded
+                      ? containerHeight * 0.65
+                      : containerHeight * 0.89, // 원하는 위치로 설정
+                  child: GestureDetector(
+                    onTap: () {
+                      {
+                        context.read<MainProvider>().setIsExpanded();
+                        _scrollToBottom();
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        AnimatedContainer(
+                          duration: Duration(milliseconds: 300),
+                          width: containerWidth,
+                          height: 35,
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(255, 235, 237, 238),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(25),
+                            ),
+                          ),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '    ${context.watch<MainProvider>().listTitle}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF989898),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        'FAQ',
-                        style: TextStyle(
-                          color: Color(0xFF2F5B9C),
-                          fontSize: 18,
+                        Positioned(
+                          right: 12, // 이미지를 우측으로 이동시킬 위치 조정
+                          top: 14, // 이미지를 상단으로 이동시킬 위치 조정
+                          child: Image.asset(
+                            context.watch<MainProvider>().isExpanded
+                                ? 'assets/VectorBottom.png'
+                                : 'assets/VectorHigh.png', // 이미지 경로 및 파일명
+                            width: 12, // 이미지의 가로 크기 설정
+                            height: 7, // 이미지의 세로 크기 설정
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  Column(
-                    children: [
-                      Container(
-                        width: 62, // 버튼의 너비 조정
-                        height: 62, // 버튼의 높이 조정
-                        child: FloatingActionButton(
-                          onPressed: () {
-                            // 공지사항 추가 예정
-                          },
-                          backgroundColor: Color(0xFFEDF4FF),
-                          mini: false,
-                          heroTag: null,
-                          child: Image.asset('assets/Vector.png'),
-                        ),
+                ),
+                if (context.watch<MainProvider>()._isExpanded)
+                  Positioned(
+                    top: containerHeight * 0.699,
+                    child: Container(
+                      color: Colors.white,
+                      width: containerWidth, // 리스트뷰의 너비 지정
+                      height: containerHeight * 0.24, // 리스트뷰의 높이 지정
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero, // 상단 여백 제거
+                        itemCount:
+                            context.watch<MainProvider>().language == "KOR"
+                                ? context.watch<MainProvider>().star
+                                    ? context
+                                        .read<ListProvider>()
+                                        .theSelectionList
+                                        .length
+                                    : context
+                                        .read<ListProvider>()
+                                        .topQuestionsList
+                                        .length
+                                : context.watch<MainProvider>().star
+                                    ? context
+                                        .read<ListProvider>()
+                                        .theSelectionListEnglish
+                                        .length
+                                    : context
+                                        .read<ListProvider>()
+                                        .topQuestionsListEnglish
+                                        .length,
+                        itemExtent: 35, // 아이템의 높이 지정
+                        itemBuilder: (BuildContext context, int index) {
+                          final String itemText =
+                              context.watch<MainProvider>().language == "KOR"
+                                  ? context.watch<MainProvider>().star
+                                      ? context
+                                          .read<ListProvider>()
+                                          .theSelectionList[index]
+                                      : context
+                                          .read<ListProvider>()
+                                          .topQuestionsList[index]
+                                  : context.watch<MainProvider>().star
+                                      ? context
+                                          .read<ListProvider>()
+                                          .theSelectionListEnglish[index]
+                                      : context
+                                          .read<ListProvider>()
+                                          .topQuestionsListEnglish[index];
+                          return ListTile(
+                            title: Text(
+                              itemText,
+                              style: TextStyle(fontSize: 14), // 글자 크기 지정
+                            ),
+                            onTap: () {
+                              context
+                                  .read<MainProvider>()
+                                  .addMessage(Message(itemText, false, 0));
+                              context.read<MainProvider>().setIsExpanded();
+                              _scrollToBottom();
+                            },
+                          );
+                        },
                       ),
-                      SizedBox(height: 20),
-                      Text(
-                        '공지사항',
-                        style: TextStyle(
-                          color: Color(0xFF2F5B9C),
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                Positioned(
+                  top: containerHeight * 0.94,
+                  left: 0,
+                  child: Container(
+                    width: containerWidth,
+                    height: containerHeight * 0.5,
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 3.0, vertical: 2),
+                            color: Color(0xFFE2E4E5),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 30,
+                                  height: 40,
+                                  child: Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 1),
+                                    child: InkWell(
+                                      onTap: () {
+                                        // 버튼이 눌렸을 때 수행할 작업을 여기에 작성하세요.
+                                        {
+                                          context
+                                              .read<MainProvider>()
+                                              .initState();
+                                        }
+                                        ;
+                                        WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                          _scrollController.animateTo(
+                                            _scrollController.position
+                                                .maxScrollExtent, // 맨 밑으로 이동
+                                            duration:
+                                                Duration(milliseconds: 200),
+                                            curve: Curves.easeInOut,
+                                          );
+                                        });
+                                      },
+                                      child: Image.asset('assets/home.png'),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 5.0),
+                                Container(
+                                  width: containerWidth * 0.8,
+                                  height: 30,
+                                  alignment: Alignment.center,
+                                  child: Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 1),
+                                    child: TextField(
+                                      controller: _controller,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black,
+                                      ),
+                                      decoration: InputDecoration(
+                                        contentPadding: EdgeInsets.symmetric(
+                                            vertical: 5.0, horizontal: 12.0),
+                                        hintText: context
+                                                    .watch<MainProvider>()
+                                                    .language ==
+                                                "KOR"
+                                            ? "질문을 입력하세요"
+                                            : "Please enter a question",
+                                        hintStyle:
+                                            TextStyle(color: Colors.grey),
+                                        fillColor: Colors.white,
+                                        filled: true,
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(25),
+                                          borderSide: BorderSide(
+                                              width: 0.8,
+                                              color:
+                                                  Color.fromARGB(255, 0, 0, 0)),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(25),
+                                          borderSide: BorderSide(
+                                              width: 0.15,
+                                              color: Color(0xFFBEBEBE)),
+                                        ),
+                                        suffixIcon: InkWell(
+                                          onTap: () {
+                                            if (_controller.text.isNotEmpty) {
+                                              context
+                                                  .read<MainProvider>()
+                                                  .addMessage(Message(
+                                                      _controller.text,
+                                                      false,
+                                                      0));
+                                              WidgetsBinding.instance
+                                                  .addPostFrameCallback((_) {
+                                                _scrollController.animateTo(
+                                                  _scrollController.position
+                                                      .maxScrollExtent, // 맨 밑으로 이동
+                                                  duration: Duration(
+                                                      milliseconds: 200),
+                                                  curve: Curves.easeInOut,
+                                                );
+                                              });
+                                            }
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8),
+                                            child: Transform.translate(
+                                              offset: Offset(5,
+                                                  0), // 원하는 xOffset 및 yOffset 값으로 변경합니다.
+                                              child: Icon(
+                                                Icons.send, // 원하는 아이콘으로 변경하세요.
+                                                color: const Color.fromARGB(
+                                                    255, 1, 86, 156),
+                                                size: 24, // 원하는 크기로 변경하세요.
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      onChanged: (text) {
+                                        // 입력 값이 변경될 때 수행할 작업을 여기에 작성하세요.
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    SizedBox(width: 7.0),
+                                    InkWell(
+                                      onTap: (context
+                                          .read<MainProvider>()
+                                          ._toggleStar),
+                                      child: AnimatedCrossFade(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        firstChild: Transform.scale(
+                                          scale: context
+                                                  .watch<MainProvider>()
+                                                  ._isStarSelected
+                                              ? 1
+                                              : 1,
+                                          child: SizedBox(
+                                            width: 28,
+                                            height: 28,
+                                            child: Image.asset(
+                                              "assets/star.png",
+                                            ),
+                                          ),
+                                        ),
+                                        secondChild: Transform.scale(
+                                          scale: context
+                                                  .watch<MainProvider>()
+                                                  ._isStarSelected
+                                              ? 1
+                                              : 1,
+                                          child: SizedBox(
+                                            width: 28,
+                                            height: 28,
+                                            child: Image.asset(
+                                              "assets/star2.png",
+                                            ),
+                                          ),
+                                        ),
+                                        crossFadeState: context
+                                                .watch<MainProvider>()
+                                                ._isStarSelected
+                                            ? CrossFadeState.showSecond
+                                            : CrossFadeState.showFirst,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ])),
+        ])));
   }
 }
 
-class Message {
-  String text;
-  bool isLeft;
-  int box;
-  bool _isStarSelected;
-  final DateTime createdAt;
-  Message(this.text, this.isLeft, this.box, {bool isStarSelected = false})
-      : _isStarSelected = isStarSelected,
-        createdAt = DateTime.now();
+class MainProvider with ChangeNotifier {
+  // 입력창 위에 보여줄 자동완성 목록
+  bool _loginState = false;
+  bool get getLoginState => _loginState;
+  void setLogin(bool _state) {
+    _loginState = !_state;
+    notifyListeners();
+  }
 
-  String getCreatedAtString() {
-    final hour = createdAt.hour >= 12 ? createdAt.hour - 12 : createdAt.hour;
-    final min = createdAt.minute;
-    final timeOfDay = createdAt.hour >= 12 ? '오후' : '오전';
-    return '$timeOfDay ${(hour < 10) ? '0$hour' : hour}:${(min < 10) ? '0$min' : min}';
+  String _accessToken = '';
+  String get AToken => _accessToken;
+  void setAToken(String token) {
+    _accessToken = token;
+    notifyListeners();
+  }
+
+  String _refreshToken = '';
+  String get RToken => _refreshToken;
+  void setRToken(String token) {
+    _refreshToken = token;
+    notifyListeners();
+  }
+
+  bool _isExpanded = false; // Define the _isExpanded variable
+  bool get isExpanded => _isExpanded;
+  void setIsExpanded() {
+    _isExpanded = !_isExpanded;
+    notifyListeners();
+  }
+
+  String listTitle = '실시간 TOP 질문';
+  String get title => listTitle;
+  bool _isStarSelected = false;
+  bool get star => _isStarSelected;
+  void _toggleStar() {
+    _isStarSelected = !_isStarSelected;
+    _setListTitle();
+    notifyListeners();
+  }
+
+  bool showAutocompleteButton = false;
+  String _selectedLanguage = 'KOR';
+  String get language => _selectedLanguage;
+
+  List<Message> _messages = [];
+  List<Message> get messages => _messages;
+
+  void addMessage(Message message) {
+    _messages.add(message);
+    notifyListeners();
+  }
+
+  MyApp myAppInstance = MyApp();
+
+  void initState() {
+    // 초기 메시지 설정
+    addMessage(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0,
+        showTimestampAndShareIcon: false));
+    addMessage(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9,
+        showUserNameAndPhoto: false));
+  }
+
+  bool isInitialized = false;
+
+  void startInitState() {
+    if (!isInitialized) {
+      _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0,
+          showTimestampAndShareIcon: false));
+      _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9,
+          showUserNameAndPhoto: false));
+      isInitialized = true;
+    }
+  }
+
+  void _setListTitle() {
+    if (_selectedLanguage == 'KOR') {
+      listTitle = _isStarSelected ? '즐겨찾기' : '실시간 TOP 질문';
+    } else {
+      listTitle = _isStarSelected ? 'Bookmark' : 'Top real-time questions';
+    }
+  }
+
+  void _setSelectedLanguage(String language) {
+    _selectedLanguage = language;
+    notifyListeners();
+  }
+
+  void _sendMessage(String text, bool isLeft,
+      {int box = 0,
+      bool showTimestampAndShareIcon = true,
+      bool showUserNameAndPhoto = true}) {
+    _messages.add(Message(text, isLeft, box,
+        showTimestampAndShareIcon: showTimestampAndShareIcon,
+        showUserNameAndPhoto: showUserNameAndPhoto));
+    //myAppInstance._scrollToBottom();
+    notifyListeners();
   }
 }
 
-class user {
-  String name;
-  String id;
-  String password;
+class ListProvider with ChangeNotifier {
+  List<String> topQuestionsListEnglish = [
+    '1. How can I apply for a scholarship?',
+    "2. Please provide the contact information for the university's support team",
+    '질문 3',
+    '질문 4',
+    '질문 5',
+    '질문 6',
+    '질문 7',
+    '질문 8',
+    '질문 9',
+    '질문 10',
+  ];
+  List<String> theSelectionListEnglish = [
+    '1. asdfasdf',
+    '2. fdsafdsa',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+  ];
+  void SelectionAddStringEnglish(String str) {
+    theSelectionListEnglish.add(str);
+    notifyListeners();
+  }
 
-  user(this.id, this.name, this.password);
+  void SelectionRemoveStringEnglish(String str) {
+    theSelectionListEnglish.remove(str);
+    notifyListeners();
+  }
+
+  void QuestionAddStringEnglish(String str) {
+    topQuestionsListEnglish.add(str);
+    notifyListeners();
+  }
+
+  void QuestionRemoveStringEnglish(String str) {
+    topQuestionsListEnglish.remove(str);
+    notifyListeners();
+  }
+
+  List<String> topQuestionsList = [
+    '1. 장학금 신청을 하려면 어떻게 하나요?',
+    '2. 대학별 교학지원팀 연락처 알려주세요',
+    '질문 3',
+    '질문 4',
+    '질문 5',
+    '질문 6',
+    '질문 7',
+    '질문 8',
+    '질문 9',
+    '질문 10',
+  ];
+  List<String> theSelectionList = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+  ];
+  void SelectionAddString(String str) {
+    theSelectionList.add(str);
+    notifyListeners();
+  }
+
+  void SelectionRemoveString(String str) {
+    theSelectionList.remove(str);
+    notifyListeners();
+  }
+
+  void QuestionAddString(String str) {
+    topQuestionsList.add(str);
+    notifyListeners();
+  }
+
+  void QuestionRemoveString(String str) {
+    topQuestionsList.remove(str);
+    notifyListeners();
+  }
 }

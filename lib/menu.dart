@@ -19,14 +19,14 @@ class menuPage extends StatelessWidget {
           child: Stack(
             children: [
               Positioned(
-                left: containerWidth * 0.39,
-                top: 181,
+                left: containerWidth * 0.27,
+                top: 140,
                 child: Container(
-                  width: 99,
-                  height: 98,
+                  width: 99 * 2,
+                  height: 98 * 2,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage("assets/gachonMark.png"),
+                      image: AssetImage("assets/garam-E.png"),
                       fit: BoxFit.fill,
                     ),
                   ),
@@ -54,17 +54,17 @@ class menuPage extends StatelessWidget {
                 ),
               ),
               Positioned(
-                left: containerWidth * 0.403,
+                left: containerWidth * 0.385,
                 top: 300,
                 child: SizedBox(
-                  width: 90,
+                  width: 105,
                   height: 40,
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         PageRouteBuilder(
-                          pageBuilder: (_, animation, __) => login.loginPage(),
+                          pageBuilder: (_, animation, __) => login.LoginPage(),
                           transitionsBuilder: (_, animation, __, child) {
                             const begin = Offset(1.0, 0.0);
                             const end = Offset.zero;
