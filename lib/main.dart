@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'menu.dart' as menu;
 import 'setting.dart';
 import 'reset_password.dart';
@@ -11,6 +12,10 @@ import 'lists.dart';
 import 'package:share/share.dart';
 import 'package:flutter/services.dart';
 import './BottomSheetMenu.dart';
+import 'papago.dart' as papago;
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 //import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() {
@@ -53,6 +58,16 @@ class _MyApp extends StatelessWidget {
   Widget _buildMessageItem(BuildContext context, Message message) {
     Color _unselectedTextColor = Colors.black;
     Color _selectedTextColor = Colors.white;
+    void openURL(String url) async {
+      print('주소형식 : $url');
+      if (url.startsWith('http')) {
+        await launchUrlString(url);
+      } else {
+        print('올바른 주소 형식이 아닙니다: $url');
+      }
+    }
+
+    List<String> stringList = message.boxString.split('|');
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 0.0),
       child: Row(
@@ -147,7 +162,7 @@ class _MyApp extends StatelessWidget {
                       : -40),
               child: Container(
                 margin: message.text == "안녕하세요! 채팅에 오신 것을 환영합니다."
-                    ? message.box == 0
+                    ? message.initbox == 0
                         ? EdgeInsets.only(right: 8.0, bottom: 6)
                         : EdgeInsets.only(right: 8.0, bottom: 0)
                     : message.isLeft
@@ -191,18 +206,38 @@ class _MyApp extends StatelessWidget {
                               color: Colors.black,
                             ),
                           ),
-                          if (message.box != 0) SizedBox(height: 8.0),
+                          if (message.initbox != 0) SizedBox(height: 8.0),
                           Wrap(
                             spacing: 8.0,
                             runSpacing: 8.0,
                             children: List.generate(
-                              message.box,
+                              message.initbox,
                               (index) => GestureDetector(
                                 onTap: () {
                                   // 버튼 클릭 이벤트 처리
                                   //print('버튼 $index 클릭됨');
-                                  context.read<MainProvider>().addMessage(
-                                      Message("버튼 $index 클릭됨", true, 0));
+                                  if (context.read<MainProvider>().language ==
+                                      "KOR") {
+                                    String str = context
+                                        .read<ListProvider>()
+                                        .mainKoreanResponse[index];
+                                    context.read<MainProvider>().addMessage(
+                                        Message(
+                                            "$str",
+                                            true,
+                                            0,
+                                            0,
+                                            context
+                                                .read<ListProvider>()
+                                                .mainResponsesUrl[index]
+                                                .toString()));
+                                  } else {
+                                    String str = context
+                                        .read<ListProvider>()
+                                        .mainEnglishResponse[index];
+                                    context.read<MainProvider>().addMessage(
+                                        Message("$str", true, 0, 0, ''));
+                                  }
 
                                   WidgetsBinding.instance
                                       .addPostFrameCallback((_) {
@@ -224,10 +259,26 @@ class _MyApp extends StatelessWidget {
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: Text(
-                                    '버튼 $index',
-                                    style: TextStyle(
-                                      color: Colors.black,
+                                  child: Center(
+                                    // 텍스트를 중앙에 정렬하는 Center 위젯 추가
+                                    child: Text(
+                                      context.watch<MainProvider>().language ==
+                                              "KOR"
+                                          ? context
+                                              .read<ListProvider>()
+                                              .mainKorean[index]
+                                          : context
+                                              .read<ListProvider>()
+                                              .mainEnglish[index],
+                                      style: TextStyle(
+                                        fontSize: context
+                                                    .watch<MainProvider>()
+                                                    .language ==
+                                                "KOR"
+                                            ? 14
+                                            : 12,
+                                        color: Colors.black,
+                                      ),
                                     ),
                                   ),
                                   height: 45, // 높이 45
@@ -236,6 +287,54 @@ class _MyApp extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (message.boxString != '')
+                            Wrap(
+                              spacing: 8.0,
+                              runSpacing: 8.0,
+                              children: List.generate(
+                                stringList.length,
+                                (index) => GestureDetector(
+                                    onTap: () {
+                                      // 버튼 클릭 이벤트 처리
+                                      //print('버튼 $index 클릭됨');
+                                      openURL(stringList[index]);
+                                      // openURL('https://google.com');
+                                      //우선 임의로 처리 후에 안에 있는 텍스트 내용을 바탕으로 서버에서 데이터 받아오기
+                                    },
+                                    child: Center(
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 12.0,
+                                          vertical: 8.0,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Center(
+                                          // 텍스트를 중앙에 정렬하는 Center 위젯 추가
+                                          child: Text(
+                                            (stringList[index].contains('http'))
+                                                ? '자세한 내용 보러가기'
+                                                : stringList[index],
+                                            style: TextStyle(
+                                              fontSize: context
+                                                          .watch<MainProvider>()
+                                                          .language ==
+                                                      "KOR"
+                                                  ? 14
+                                                  : 12,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                        height: 35, // 높이 45
+                                        width: 170, // 가로 88
+                                      ),
+                                    )),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -290,6 +389,24 @@ class _MyApp extends StatelessWidget {
 
     final double containerHeight = screenHeight;
     final double containerWidth = screenWidth;
+
+    Future<String> translateEnglishToKorean(String text) async {
+      try {
+        String translatedText = await papago.getTranslation_papagoEnglish(text);
+        return translatedText;
+      } catch (e) {
+        return 'error';
+      }
+    }
+
+    Future<String> translateKoreanToEnglish(String text) async {
+      try {
+        String translatedText = await papago.getTranslation_papagoKorea(text);
+        return translatedText;
+      } catch (e) {
+        return 'error';
+      }
+    }
 
     context.read<MainProvider>().startInitState();
     return Scaffold(
@@ -503,6 +620,7 @@ class _MyApp extends StatelessWidget {
                         }),
                   ),
                 ),
+                //if (context.watch<MainProvider>().inputText == "")
                 Positioned(
                   top: context.watch<MainProvider>().isExpanded
                       ? containerHeight * 0.65
@@ -554,6 +672,8 @@ class _MyApp extends StatelessWidget {
                   ),
                 ),
                 if (context.watch<MainProvider>()._isExpanded)
+                  // if (context.watch<MainProvider>()._isExpanded &&
+                  //     (context.watch<MainProvider>().inputText == ""))
                   Positioned(
                     top: containerHeight * 0.699,
                     child: Container(
@@ -606,9 +726,8 @@ class _MyApp extends StatelessWidget {
                               style: TextStyle(fontSize: 14), // 글자 크기 지정
                             ),
                             onTap: () {
-                              context
-                                  .read<MainProvider>()
-                                  .addMessage(Message(itemText, false, 0));
+                              context.read<MainProvider>().addMessage(
+                                  Message(itemText, false, 0, 0, ''));
                               context.read<MainProvider>().setIsExpanded();
                               _scrollToBottom();
                             },
@@ -712,10 +831,42 @@ class _MyApp extends StatelessWidget {
                                             if (_controller.text.isNotEmpty) {
                                               context
                                                   .read<MainProvider>()
+                                                  .setInputText("");
+                                              String text = _controller.text;
+                                              if (context
+                                                      .read<MainProvider>()
+                                                      .language ==
+                                                  "ENG") {
+                                                translateEnglishToKorean(text)
+                                                    .then((translatedText) {
+                                                  text = translatedText;
+                                                }).catchError((error) {
+                                                  print('번역 실패: $error');
+                                                });
+                                              }
+                                              //서버 모델에서 답변요청
+                                              if (context
+                                                      .read<MainProvider>()
+                                                      .language ==
+                                                  "ENG") {
+                                                translateKoreanToEnglish(text)
+                                                    .then((translatedText) {
+                                                  text = translatedText;
+                                                }).catchError((error) {
+                                                  print('번역 실패: $error');
+                                                });
+                                              }
+
+                                              context
+                                                  .read<MainProvider>()
                                                   .addMessage(Message(
                                                       _controller.text,
                                                       false,
-                                                      0));
+                                                      0,
+                                                      0,
+                                                      ''));
+                                              _controller.clear();
+                                              //스크롤 밑으로 내림
                                               WidgetsBinding.instance
                                                   .addPostFrameCallback((_) {
                                                 _scrollController.animateTo(
@@ -746,6 +897,9 @@ class _MyApp extends StatelessWidget {
                                       ),
                                       onChanged: (text) {
                                         // 입력 값이 변경될 때 수행할 작업을 여기에 작성하세요.
+                                        context
+                                            .read<MainProvider>()
+                                            .setInputText(text);
                                       },
                                     ),
                                   ),
@@ -811,8 +965,16 @@ class _MyApp extends StatelessWidget {
 }
 
 class MainProvider with ChangeNotifier {
+  String _inputText = '';
+  String get inputText => _inputText;
+  void setInputText(String input) {
+    _inputText = input;
+    notifyListeners();
+  }
+
   // 입력창 위에 보여줄 자동완성 목록
   bool _loginState = false;
+
   bool get getLoginState => _loginState;
   void setLogin(bool _state) {
     _loginState = !_state;
@@ -866,21 +1028,38 @@ class MainProvider with ChangeNotifier {
 
   void initState() {
     // 초기 메시지 설정
-    addMessage(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0,
-        showTimestampAndShareIcon: false));
-    addMessage(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9,
-        showUserNameAndPhoto: false));
+    if (language == "KOR") {
+      addMessage(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0, 0, '',
+          showTimestampAndShareIcon: false));
+      addMessage(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9, 0, '',
+          showUserNameAndPhoto: false));
+    } else {
+      addMessage(Message("Hello! Welcome to the chat.", true, 0, 0, '',
+          showTimestampAndShareIcon: false));
+      addMessage(Message("Hello! Welcome to the chat.", true, 9, 0, '',
+          showUserNameAndPhoto: false));
+    }
   }
 
   bool isInitialized = false;
 
   void startInitState() {
-    if (!isInitialized) {
-      _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0,
-          showTimestampAndShareIcon: false));
-      _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9,
-          showUserNameAndPhoto: false));
-      isInitialized = true;
+    if (language == "KOR") {
+      if (!isInitialized) {
+        _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0, 0, '',
+            showTimestampAndShareIcon: false));
+        _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9, 0, '',
+            showUserNameAndPhoto: false));
+        isInitialized = true;
+      }
+    } else {
+      if (!isInitialized) {
+        _messages.add(Message("Hello! Welcome to the chat.", true, 0, 0, '',
+            showTimestampAndShareIcon: false));
+        _messages.add(Message("Hello! Welcome to the chat.", true, 9, 0, '',
+            showUserNameAndPhoto: false));
+        isInitialized = true;
+      }
     }
   }
 
@@ -901,7 +1080,7 @@ class MainProvider with ChangeNotifier {
       {int box = 0,
       bool showTimestampAndShareIcon = true,
       bool showUserNameAndPhoto = true}) {
-    _messages.add(Message(text, isLeft, box,
+    _messages.add(Message(text, isLeft, box, 0, '',
         showTimestampAndShareIcon: showTimestampAndShareIcon,
         showUserNameAndPhoto: showUserNameAndPhoto));
     //myAppInstance._scrollToBottom();
@@ -910,6 +1089,94 @@ class MainProvider with ChangeNotifier {
 }
 
 class ListProvider with ChangeNotifier {
+  List<String> mainResponsesUrl = [
+    '',
+    'https://www.gachon.ac.kr/kor/1148/subview.do',
+    '',
+    '',
+    'https://www.gachon.ac.kr/kor/1156/subview.do',
+    '',
+    '',
+    'https://www.gachon.ac.kr/kor/1075/subview.do',
+    '',
+  ];
+  List<String> mainEnglishResponse = [
+    'Club',
+    'Job Posting',
+    'mudang-i',
+    'Campus menu',
+    'Library',
+    'Lecture',
+    'University Graduate',
+    'Calendar',
+    'Garame ?',
+  ];
+  List<String> mainKoreanResponse = [
+    '동아리',
+    '''취업공지에 대해 알려드릴게요.
+-2024-1학기 해외인턴십(호주) 학생 추가 모집 안내(심사 탈락학생 재지원 가능)
+-2023-동계 단기 현장실습 참여 기업 리스트(4차)( 모집기한 : ~12.17)
+-2023년도 점프업 프로젝트 수당신청 마감 안내
+-2023년 12월 가천대 일자리플러스센터(취업진로처) 프로그램 일정 안내
+-2023-동계(단기)현장실습학기제 시행 안내(+서류 제출 기한 연장)''',
+    '''무당이 정보에 관해 알려드릴게요.
+
+◆ 운영개요
+- 운영시간 : 08:30 ~ 17:30
+- 배차간격 : 10분
+- IT융합대학 → 학생생활관, 학생생활관 → IT융합대학 동시출발
+- 노선 :
+· IT융합대학 → 교육대학원 → 학생회관 → 학생생활관
+· 학생생활관 → 학생회관 → 중앙도서관 → 예술·체육대학1 →글로벌센터 → IT융합대학
+◆ 기타사항
+-12:00 ~ 13:00 : 운휴시간
+-08:30 ~ 09:00 : 상황에 따라 추가버스 투입 탄력 운영
+-방학, 우천시 미운영''',
+    '''학식 메뉴는 학생식당마다 달라요.
+알고 싶은 식당을 선택해줄래요?''',
+    '''도서관에 대해 알려드릴게요.
+    
+가천대학교 도서관은 글로벌캠퍼스 중앙도서관, 전자정보도서관, 메디컬캠퍼스 중앙도서관으로 구성되어 있어요.
+홈페이지에서 더 자세한 정보를 찾아보세요!''',
+    '''강의''',
+    '''대학 대학원''',
+    '''학사일정에 대해 알려드릴게요.
+    
+-11.24 ~ 12.21 P-실무프로젝트(4주)
+-12.08 ~ 12.14 기말고사
+-12.15 ~ 12.21 보강기간
+-12.18 ~ 12.29 재입학 신청기간
+-12.22 ~ 02.29 미등록 휴학기간
+-12.22	동계방학
+-12.26 ~ 12.28 성적공시 및 정정''',
+    '''가람이에 대해 소개해드릴게요.
+
+🤖”가람이”는 가천대학교와 학교 상징인 바람개비의 합성어로 가천대학교 유일무이의 챗봇을 의미합니다.
+
+가람이의 고래🐳 캐릭터는 맑은 물에서의 자유로움을 상징으로 하며 머리 위 물분수의 형태를 가천 바람개비로 하는 것이 가람이만의 특징입니다.''',
+  ];
+  List<String> mainEnglish = [
+    'Club',
+    'Job Posting',
+    'mudang-i',
+    'Campus menu',
+    'Library',
+    'Lecture',
+    'University Graduate',
+    'Calendar',
+    'Garame ?',
+  ];
+  List<String> mainKorean = [
+    '동아리',
+    '채용공고',
+    '무당이',
+    '학식',
+    '도서관',
+    '강의',
+    '대학교',
+    '학사일정',
+    '가람이?',
+  ];
   List<String> topQuestionsListEnglish = [
     '1. How can I apply for a scholarship?',
     "2. Please provide the contact information for the university's support team",

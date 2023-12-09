@@ -1,9 +1,40 @@
 import 'package:flutter/material.dart';
-import 'settings_API.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_application_garmae/settings_API.dart';
+import 'token_store.dart';
+import 'login.dart';
+import 'main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class setting extends StatelessWidget {
-  const setting({Key? key}) : super(key: key);
+int selectedCount = 0;
+
+class setting extends StatefulWidget {
+  @override
+  _SettingState createState() => _SettingState();
+}
+
+class _SettingState extends State<setting> {
+  @override
+  void initState() {
+    super.initState();
+    loadSelectedCount().then((count) {
+      setState(() {
+        selectedCount = count;
+      });
+    });
+  }
+
+  Future<void> saveSelectedCount(int count) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('selectedCount', count);
+  }
+
+  Future<int> loadSelectedCount() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int loadedCount = prefs.getInt('selectedCount') ?? 0;
+    print('Loaded selectedCount: $loadedCount'); // 값 출력
+    return loadedCount;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,13 +99,15 @@ class setting extends StatelessWidget {
               ),
             ),
           ),
+          /* 정보 변경 버튼 */
           Positioned(
-            //top: screenWidth * 1.22, // 500
             top: 450,
             child: ElevatedButton(
               onPressed: () async {
                 TextEditingController _passwordController =
                     TextEditingController(); // 비밀번호 입력 컨트롤러 선언
+
+                token_data();
 
                 showDialog(
                   context: context,
@@ -82,6 +115,7 @@ class setting extends StatelessWidget {
                     return AlertDialog(
                       contentPadding: EdgeInsets.zero,
                       content: Container(
+                        color: Colors.white,
                         width: screenWidth * 0.8,
                         height: screenWidth * 0.45,
                         child: Column(
@@ -97,13 +131,14 @@ class setting extends StatelessWidget {
                                 Container(
                                   alignment:
                                       Alignment.centerLeft, // 이미지를 왼쪽에 정렬
-                                  child: Image.asset(
-                                    'assets/edit.png',
-                                    width: 20,
-                                    height: 20,
+                                  child: Icon(
+                                    Icons.edit_outlined,
+                                    color: Color(0xFF2F5B9C),
+                                    size: 20,
                                   ),
                                 ),
                                 SizedBox(width: 15),
+                                /* 비밀번호 확인 창 */
                                 Expanded(
                                   child: Container(
                                     alignment: Alignment.center, // 텍스트를 중앙에 정렬
@@ -179,7 +214,7 @@ class setting extends StatelessWidget {
                                 //TODO: 비밀번호 확인 로직 추가 필요
 
                                 // 입력한 비밀번호가 올바른지 확인
-                                if (enteredPassword == "1234") {
+                                if (enteredPassword == "jaemin0817") {
                                   Navigator.pop(context); // 비밀번호 다이얼로그 닫기
 
                                   showDialog(
@@ -195,6 +230,7 @@ class setting extends StatelessWidget {
                                       return AlertDialog(
                                         contentPadding: EdgeInsets.zero,
                                         content: Container(
+                                          color: Colors.white,
                                           width: screenWidth * 0.8,
                                           height: screenWidth * 0.6,
                                           child: Column(
@@ -207,10 +243,10 @@ class setting extends StatelessWidget {
                                                   Container(
                                                     alignment: Alignment
                                                         .centerLeft, // 이미지를 왼쪽에 정렬
-                                                    child: Image.asset(
-                                                      'assets/edit.png',
-                                                      width: 20,
-                                                      height: 20,
+                                                    child: Icon(
+                                                      Icons.edit_outlined,
+                                                      color: Color(0xFF2F5B9C),
+                                                      size: 20,
                                                     ),
                                                   ),
                                                   SizedBox(width: 15),
@@ -331,20 +367,60 @@ class setting extends StatelessWidget {
                                                 onPressed: () async {
                                                   String newNickname =
                                                       _nicknameController.text;
-                                                  // TODO: 새 닉네임을 처리하는 로직 추가
                                                   String newPassword =
                                                       _passwordController.text;
 
                                                   await updateUserInfo(
                                                       newNickname, newPassword);
 
+                                                  Future.delayed(Duration.zero,
+                                                      () {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (context) {
+                                                        return AlertDialog(
+                                                          backgroundColor: Colors
+                                                              .white, // AlertDialog의 배경색을 흰색으로 설정
+                                                          title: Text('성공'),
+                                                          content: Text(
+                                                              '정보 변경을 성공하였습니다.'),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop(); // 알림창 닫기
+                                                              },
+                                                              child: Text(
+                                                                '확인',
+                                                                style: TextStyle(
+                                                                    color: Colors
+                                                                        .black), // 텍스트 색상을 검정색으로 설정
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
+                                                  });
+
                                                   Navigator.pop(context);
                                                 },
-                                                child: Text("확인"),
+                                                child: Text(
+                                                  "확인",
+                                                  style: TextStyle(
+                                                      color: Colors
+                                                          .white), // 텍스트 색상을 흰색으로 설정
+                                                ),
                                                 style: ElevatedButton.styleFrom(
                                                   padding: EdgeInsets.symmetric(
                                                       horizontal: 50),
                                                   primary: Color(0xFF2F5B9C),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            0), // 버튼 둥글게 하는 정도를 0으로 설정
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -360,10 +436,18 @@ class setting extends StatelessWidget {
                                   );
                                 }
                               },
-                              child: Text("확인"),
+                              child: Text(
+                                "확인",
+                                style: TextStyle(
+                                    color: Colors.white), // 텍스트 색상을 흰색으로 설정
+                              ),
                               style: ElevatedButton.styleFrom(
                                 padding: EdgeInsets.symmetric(horizontal: 50),
                                 primary: Color(0xFF2F5B9C),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      0), // 버튼 둥글게 하는 정도를 0으로 설정
+                                ),
                               ),
                             ),
                           ],
@@ -389,10 +473,10 @@ class setting extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/edit.png',
-                      width: 18,
-                      height: 18,
+                    Icon(
+                      Icons.edit_outlined,
+                      color: Color(0xFF2F5B9C),
+                      size: 20,
                     ),
                     Expanded(
                       child: Align(
@@ -416,8 +500,6 @@ class setting extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    int selectedCount = 0;
-
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
@@ -434,6 +516,7 @@ class setting extends StatelessWidget {
                             return AlertDialog(
                               contentPadding: EdgeInsets.zero,
                               content: Container(
+                                color: Colors.white,
                                 width: buttonWidth,
                                 height: 450,
                                 child: Column(
@@ -443,10 +526,10 @@ class setting extends StatelessWidget {
                                           MainAxisAlignment.center,
                                       children: [
                                         SizedBox(width: 15),
-                                        Image.asset(
-                                          'assets/speaker_notes.png',
-                                          width: 20,
-                                          height: 20,
+                                        Icon(
+                                          Icons.speaker_notes_outlined,
+                                          color: Color(0xFF2F5B9C),
+                                          size: 20,
                                         ),
                                         SizedBox(width: buttonWidth * 0.145),
                                         Expanded(
@@ -535,26 +618,39 @@ class setting extends StatelessWidget {
                                                                   .where((selected) =>
                                                                       selected)
                                                                   .length;
+
+                                                          // selectedCount를 저장합니다
+                                                          saveSelectedCount(
+                                                              selectedCount);
                                                         });
                                                       } else {
                                                         showDialog(
                                                           context: context,
-                                                          builder: (context) =>
-                                                              AlertDialog(
-                                                            title: Text("경고"),
-                                                            content: Text(
-                                                                "최대 5개까지만 선택할 수 있습니다."),
-                                                            actions: [
-                                                              ElevatedButton(
-                                                                onPressed: () {
-                                                                  Navigator.pop(
-                                                                      context);
-                                                                },
-                                                                child:
-                                                                    Text("확인"),
-                                                              ),
-                                                            ],
-                                                          ),
+                                                          builder: (context) {
+                                                            return AlertDialog(
+                                                              backgroundColor:
+                                                                  Colors
+                                                                      .white, // AlertDialog의 배경색을 흰색으로 설정
+                                                              title: Text('경고'),
+                                                              content: Text(
+                                                                  '최대 5개까지만 선택할 수 있습니다.'),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed:
+                                                                      () {
+                                                                    Navigator.pop(
+                                                                        context); // 알림창 닫기
+                                                                  },
+                                                                  child: Text(
+                                                                    '확인',
+                                                                    style: TextStyle(
+                                                                        color: Colors
+                                                                            .black), // 텍스트 색상을 검정색으로 설정
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            );
+                                                          },
                                                         );
                                                       }
                                                     },
@@ -624,10 +720,10 @@ class setting extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset(
-                          'assets/speaker_notes.png',
-                          width: 18,
-                          height: 18,
+                        Icon(
+                          Icons.speaker_notes_outlined,
+                          color: Color(0xFF2F5B9C),
+                          size: 20,
                         ),
                         Expanded(
                           child: Align(
@@ -651,7 +747,6 @@ class setting extends StatelessWidget {
             ),
           ),
           Positioned(
-            //top: screenWidth * 1.54,
             top: 570,
             child: ElevatedButton(
               onPressed: () {
@@ -667,150 +762,183 @@ class setting extends StatelessWidget {
                     return AlertDialog(
                       contentPadding: EdgeInsets.zero, // 내용 영역 패딩 제거
                       content: Container(
-                        width: 400, // 원하는 가로 크기 설정
-                        height: 480, // 원하는 세로 크기 설정
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(width: 15),
-                                Container(
-                                  alignment:
-                                      Alignment.centerLeft, // 이미지를 왼쪽에 정렬
-                                  child: Image.asset(
-                                    'assets/headset_mic.png', // 이미지 파일 경로
-                                    width: 20,
-                                    height: 20,
+                        color: Colors.white,
+                        width: 400,
+                        height: 480,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(width: 15),
+                                  Container(
+                                    alignment:
+                                        Alignment.centerLeft, // 이미지를 왼쪽에 정렬
+                                    child: Icon(
+                                      Icons.headset_mic_outlined,
+                                      color: Color(0xFF2F5B9C),
+                                      size: 20,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: 15),
-                                Expanded(
-                                  child: Container(
-                                    alignment: Alignment.center, // 텍스트를 중앙에 정렬
+                                  SizedBox(width: 15),
+                                  Expanded(
+                                    child: Container(
+                                      alignment:
+                                          Alignment.center, // 텍스트를 중앙에 정렬
+                                      child: Text(
+                                        "문의",
+                                        style: TextStyle(
+                                            color: Color(0xFF2F5B9C),
+                                            fontSize: 20),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 15),
+                                  Container(
+                                    alignment:
+                                        Alignment.centerRight, // 아이콘을 오른쪽에 정렬
+                                    child: IconButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      icon: Icon(Icons.close),
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10), // 제목과 내용 사이 간격
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Padding(
+                                    padding:
+                                        EdgeInsets.only(left: 15), // 왼쪽 여백 설정
                                     child: Text(
-                                      "문의",
+                                      "문의 제목",
                                       style: TextStyle(
-                                          color: Color(0xFF2F5B9C),
-                                          fontSize: 20),
+                                        color: Color(0xFF2F5B9C),
+                                        fontSize: 15,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                SizedBox(width: 15),
-                                Container(
-                                  alignment:
-                                      Alignment.centerRight, // 아이콘을 오른쪽에 정렬
-                                  child: IconButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                    },
-                                    icon: Icon(Icons.close),
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 10), // 제목과 내용 사이 간격
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Padding(
-                                  padding:
-                                      EdgeInsets.only(left: 15), // 왼쪽 여백 설정
-                                  child: Text(
-                                    "문의 제목",
-                                    style: TextStyle(
-                                      color: Color(0xFF2F5B9C),
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 5),
-                            Container(
-                              width: 300, // 원하는 가로 크기 설정
-                              height: 35,
-                              child: TextField(
-                                controller: _inquiryTitleEditingController,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(5)),
-                                  contentPadding: EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 12),
-                                ),
+                                ],
                               ),
-                            ),
-                            SizedBox(height: 20), // 위 아래 간격 조절
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Padding(
-                                  padding:
-                                      EdgeInsets.only(left: 15), // 왼쪽 여백 설정
-                                  child: Text(
-                                    "문의 내용",
-                                    style: TextStyle(
-                                      color: Color(0xFF2F5B9C),
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 5),
-                            Container(
-                              width: 300, // 원하는 가로 크기 설정
-                              height: 250, // 원하는 세로 크기 설정
-                              child: TextField(
-                                controller: _inquiryDetailEditingController,
-                                maxLines: 250,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 12,
+                              SizedBox(height: 5),
+                              Container(
+                                width: 300, // 원하는 가로 크기 설정
+                                height: 35,
+                                child: TextField(
+                                  controller: _inquiryTitleEditingController,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(5)),
+                                    contentPadding: EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 12),
                                   ),
                                 ),
                               ),
-                            ),
-                            SizedBox(height: 10),
-                            ElevatedButton(
-                              onPressed: () async {
-                                String title =
-                                    _inquiryTitleEditingController.text;
-                                String content =
-                                    _inquiryDetailEditingController.text;
-                                String email = "parkjaemin08@gachon.ac.kr";
-                                try {
-                                  final response =
-                                      await sendInquiry(title, content, email);
-                                  if (response != null &&
-                                      response['isSucceed'] == true) {
-                                    // TODO: 문의 성공 처리 (사용자에게 메시지 등)
-                                    Navigator.pop(context); // AlertDialog 닫기
-                                  } else {
-                                    // TODO: 문의 실패 처리 (사용자에게 메시지 등)
-                                    print(
-                                        "Inquiry failed: ${response['message']}");
-                                  }
-                                } catch (e) {
-                                  print("Error while sending inquiry: $e");
-                                  // TODO: 에러 처리 (사용자에게 메시지 등)
-                                }
+                              SizedBox(height: 20), // 위 아래 간격 조절
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Padding(
+                                    padding:
+                                        EdgeInsets.only(left: 15), // 왼쪽 여백 설정
+                                    child: Text(
+                                      "문의 내용",
+                                      style: TextStyle(
+                                        color: Color(0xFF2F5B9C),
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Container(
+                                width: 300, // 원하는 가로 크기 설정
+                                height: 250, // 원하는 세로 크기 설정
+                                child: TextField(
+                                  controller: _inquiryDetailEditingController,
+                                  maxLines: 250,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      vertical: 8,
+                                      horizontal: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  String title =
+                                      _inquiryTitleEditingController.text;
+                                  String content =
+                                      _inquiryDetailEditingController.text;
 
-                                Navigator.pop(context); // AlertDialog 닫기
-                              },
-                              child: Text("확인"),
-                              style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 50), // 좌우 여백 조절
-                                primary: Color(0xFF2F5B9C), // 색상 변경
+                                  try {
+                                    final response =
+                                        await sendInquiry(title, content);
+                                    if (response != null &&
+                                        response.containsKey('isSuccess') &&
+                                        response['isSuccess'] == true) {
+                                      Future.delayed(Duration.zero, () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              backgroundColor: Colors.white,
+                                              title: Text('성공'),
+                                              content:
+                                                  Text('문의를 성공적으로 전송하였습니다.'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context)
+                                                        .pop(); // 알림창 닫기
+                                                  },
+                                                  child: Text(
+                                                    '확인',
+                                                    style: TextStyle(
+                                                        color: Colors.black),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      });
+                                    } else {
+                                      print(
+                                          "Inquiry failed: ${response['message']}");
+                                    }
+                                  } catch (e) {
+                                    print("Error while sending inquiry: $e");
+                                  }
+                                },
+                                child: Text(
+                                  "확인",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(horizontal: 50),
+                                  primary: Color(0xFF2F5B9C),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        0), // 버튼 둥글게 하는 정도를 0으로 설정
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -833,10 +961,10 @@ class setting extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/headset_mic.png',
-                      width: 18,
-                      height: 18,
+                    Icon(
+                      Icons.headset_mic_outlined,
+                      color: Color(0xFF2F5B9C),
+                      size: 20,
                     ),
                     Expanded(
                       child: Align(
@@ -857,67 +985,126 @@ class setting extends StatelessWidget {
             //top: screenWidth * 1.68,
             top: 620,
             right: screenWidth * 0.04,
-            child: ElevatedButton(
-              onPressed: () async {
-                try {
-                  String userId = "123";
-                  String password = "123";
-                  String nickname = "123";
+            child: Builder(
+              builder: (BuildContext context) {
+                return ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      String accessToken = TokenStore().accessToken;
+                      String refreshToken = TokenStore().refreshToken;
 
-                  final response = await sendLogout(userId, password, nickname);
-                  if (response != null) {
-                    // TODO: 로그아웃 성공 처리 (사용자에게 메시지 등)
-                    print('Logout successful: ${response['message']}');
-                    // 이후에 로그인 화면 등으로 이동하는 처리를 추가할 수 있습니다.
-                  } else {
-                    // TODO: 로그아웃 실패 처리 (사용자에게 메시지 등)
-                    print('Logout failed: ${response['message']}');
-                  }
-                } catch (e) {
-                  print("Error while logging out: $e");
-                  // TODO: 에러 처리 (사용자에게 메시지 등)
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                primary: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                elevation: 0,
-              ),
-              child: Container(
-                width: buttonWidth - 250,
-                height: 20,
-                padding: EdgeInsets.symmetric(vertical: 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Image.asset(
-                      'assets/logout.png',
-                      width: 18,
-                      height: 18,
+                      print('accessToken: $accessToken'
+                          'refreshToken: $refreshToken');
+
+                      final response =
+                          await sendLogout(accessToken, refreshToken);
+                      if (response != null) {
+                        print('Logout successful: ${response['message']}');
+                        print('로그아웃을 성공했습니다.');
+
+                        var mainProvider = context.read<MainProvider>();
+
+                        bool logout_success = true;
+
+                        print('false_data: $logout_success');
+
+                        mainProvider.setLogin(logout_success);
+                        mainProvider.setAToken('');
+                        mainProvider.setRToken('');
+
+                        print(
+                            'Login state after setLogin: ${mainProvider.getLoginState}');
+
+                        print(
+                            'AToken state after setLogin: ${mainProvider.AToken}');
+                        print(
+                            'RToken state after setLogin: ${mainProvider.RToken}');
+
+                        TokenStore().accessToken = '';
+                        TokenStore().refreshToken = '';
+                        TokenStore().userID = '';
+
+                        // 로그아웃 성공 알림창 표시
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('로그아웃'),
+                              content: Text('로그아웃을 성공했습니다.'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: Text('확인'),
+                                  onPressed: () {
+                                    // 확인 버튼을 누르면 메인 화면으로 이동
+                                    Navigator.popUntil(
+                                        context,
+                                        ModalRoute.withName(
+                                            Navigator.defaultRouteName));
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      } else {
+                        print('Logout failed: ${response['message']}');
+                      }
+                    } catch (e) {
+                      print("Error while logging out: $e");
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
                     ),
-                    SizedBox(width: 10),
-                    Padding(
-                      padding: EdgeInsets.only(right: buttonWidth * 0.008),
-                      child: Text(
-                        '로그아웃',
-                        style: TextStyle(
+                    elevation: 0,
+                  ),
+                  child: Container(
+                    width: buttonWidth - 250,
+                    height: 20,
+                    padding: EdgeInsets.symmetric(vertical: 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Icon(
+                          Icons.logout,
                           color: Color(0xFFF66767),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          size: 18,
                         ),
-                      ),
+                        SizedBox(width: 10),
+                        Padding(
+                          padding: EdgeInsets.only(right: buttonWidth * 0.008),
+                          child: Text(
+                            '로그아웃',
+                            style: TextStyle(
+                              color: Color(0xFFF66767),
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ],
       ),
     );
   }
+}
+
+void token_data() {
+  String accessToken = TokenStore().accessToken;
+  String refreshToken = TokenStore().refreshToken;
+  String UserId = TokenStore().userID;
+
+  print('Access Token: $accessToken');
+  print('Refresh Token: $refreshToken');
+  print('유저 아이디: $UserId');
 }
 
 // Provider 클래스 생성

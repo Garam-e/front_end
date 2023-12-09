@@ -6,6 +6,7 @@ import 'reset_password.dart';
 import 'serverFunction.dart';
 import 'main.dart' as main;
 import 'setting.dart';
+import 'token_store.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -40,6 +41,11 @@ class _LoginPageState extends State<LoginPage> {
       // 응답 처리 로직 작성
       if (isSuccess) {
         // 로그인 성공
+        TokenStore tokenStore = TokenStore();
+        tokenStore.accessToken = _accessToken;
+        tokenStore.refreshToken = _refreshToken;
+        tokenStore.saveUserID(id);
+
         showDialog(
           context: context,
           builder: (context) {

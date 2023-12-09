@@ -25,6 +25,7 @@ class FAQ {
             return AlertDialog(
               contentPadding: EdgeInsets.zero,
               content: Container(
+                color: Colors.white,
                 width: screenWidth * 0.9,
                 height: screenWidth * 1.1,
                 child: Column(
@@ -33,10 +34,10 @@ class FAQ {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(width: 15),
-                        Image.asset(
-                          'assets/campaign.png',
-                          width: 25,
-                          height: 25,
+                        Icon(
+                          Icons.campaign,
+                          color: Color(0xFF2F5B9C),
+                          size: 25,
                         ),
                         SizedBox(width: buttonWidth * 0.33),
                         Expanded(
@@ -105,19 +106,12 @@ class FAQ {
                                   break;
                               }
 
-                              return ExpansionTile(
-                                title: GestureDetector(
-                                  onTap: () {
-                                    selectionProvider.toggleSelection(index);
-                                    setState(() {
-                                      selectedItems = List.generate(
-                                        10,
-                                        (index) =>
-                                            selectionProvider.isSelected(index),
-                                      );
-                                    });
-                                  },
-                                  child: Row(
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                    splashFactory:
+                                        NoSplash.splashFactory), // 잉크 스플래시 제거
+                                child: ExpansionTile(
+                                  title: Row(
                                     children: [
                                       Container(
                                         width: screenWidth * 0.5,
@@ -130,25 +124,27 @@ class FAQ {
                                       ),
                                     ],
                                   ),
-                                ),
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.all(16.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // 아이템별로 다른 내용을 추가하려면 아래에 해당 아이템에 맞는 내용을 추가하세요.
-                                        if (index == 0)
-                                          Text(
-                                              "기본적인 채팅 기능은 모두가 사용가능합니다만 그리팅 메시지와 문의 같은 기능을 사용하기 위해선 가천대 이메일을 통한 로그인을 해야합니다.")
-                                        else
-                                          Text("내용 추가 예정"),
-                                        // 이와 같이 각 아이템에 맞는 내용을 추가하세요.
-                                      ],
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (index == 0)
+                                            Text(
+                                                "기본적인 채팅 기능은 모두가 사용가능합니다만 그리팅 메시지와 문의 같은 기능을 사용하기 위해선 가천대 이메일을 통한 로그인을 해야합니다.")
+                                          else if (index == 1)
+                                            Text(
+                                                "질문은 ~~~ 방식으로 해야 가장 정확한 답변을 얻을 수 있습니다.")
+                                          else if (index == 2)
+                                            Text("~~~ 플랫폼에서 사용할 수 있습니다.")
+                                          // 이와 같이 각 질문에 해당하는 답변을 추가하세요.
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               );
                             },
                           ),

@@ -5,6 +5,7 @@ import 'reset_password.dart';
 import 'setting.dart';
 import 'menu.dart';
 import 'FAQ.dart';
+import 'usageGuide.dart';
 
 class BottomSheetMenu {
   static void show(BuildContext context, bool loginState) {
@@ -19,6 +20,11 @@ class BottomSheetMenu {
       ),
       builder: (BuildContext context) {
         return Container(
+          decoration: BoxDecoration(
+            color: Colors.white, // 백그라운드 컬러를 흰색으로 설정합니다.
+            borderRadius: BorderRadius.vertical(
+                top: Radius.circular(30)), // 모서리를 둥글게 합니다.
+          ),
           padding: EdgeInsets.all(20),
           height: 240,
           child: Column(
@@ -56,11 +62,10 @@ class BottomSheetMenu {
                               color: Color(0xFFEDF4FF), // 배경 색상
                             ),
                             child: Center(
-                              child: Image.asset(
-                                'assets/settings.png',
+                              child: Icon(
+                                Icons.settings_outlined,
                                 color: Color(0xFF2F5B9C),
-                                width: 32,
-                                height: 32,
+                                size: 35,
                               ),
                             ),
                           ),
@@ -92,11 +97,10 @@ class BottomSheetMenu {
                             color: Color(0xFFEDF4FF), // 배경 색상
                           ),
                           child: Center(
-                            child: Image.asset(
-                              'assets/campaign.png',
+                            child: Icon(
+                              Icons.campaign,
                               color: Color(0xFF2F5B9C),
-                              width: 32,
-                              height: 32,
+                              size: 35,
                             ),
                           ),
                         ),
@@ -118,12 +122,7 @@ class BottomSheetMenu {
                       children: [
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => setting(),
-                              ),
-                            );
+                            showUsageGuideDialog(context);
                           },
                           child: Container(
                             width: 62,
@@ -133,11 +132,10 @@ class BottomSheetMenu {
                               color: Color(0xFFEDF4FF), // 배경 색상
                             ),
                             child: Center(
-                              child: Image.asset(
-                                'assets/Vector.png',
+                              child: Icon(
+                                Icons.help_outline,
                                 color: Color(0xFF2F5B9C),
-                                width: 32,
-                                height: 32,
+                                size: 35,
                               ),
                             ),
                           ),

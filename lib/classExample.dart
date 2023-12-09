@@ -1,7 +1,9 @@
 class Message {
   String text;
   bool isLeft;
+  int initbox;
   int box;
+  String boxString;
   bool _isStarSelected;
   bool showTimestampAndShareIcon;
   bool showUserNameAndPhoto;
@@ -11,7 +13,9 @@ class Message {
   Message(
     this.text,
     this.isLeft,
-    this.box, {
+    this.initbox,
+    this.box,
+    this.boxString, {
     bool isStarSelected = false,
     // 새로운 속성들의 기본값 설정
     this.showTimestampAndShareIcon = true,

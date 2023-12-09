@@ -71,7 +71,7 @@ class _ExpandableListExampleState extends State<ExpandableListExample> {
             // 나머지 코드 생략
             body: Scrollbar(
               controller: _scrollController,
-              isAlwaysShown: true,
+              thumbVisibility: true,
               child: Container(
                 height: screenHeight * 0.23,
                 child: ListView.builder(
