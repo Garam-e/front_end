@@ -92,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
         builder: (context) {
           return AlertDialog(
             title: Text('에러'),
-            content: Text('로그인 중에 오류가 발생했습니다.'),
+            content: Text('로그인 중에 오류가 발생했습니다.$e'),
             actions: [
               TextButton(
                 onPressed: () {

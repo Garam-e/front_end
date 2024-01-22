@@ -576,16 +576,31 @@ class _SettingState extends State<setting> {
                                               String itemName = '';
                                               switch (index) {
                                                 case 0:
-                                                  itemName = '공지사항';
+                                                  itemName = '동아리';
                                                   break;
                                                 case 1:
-                                                  itemName = '학사일정';
+                                                  itemName = '채용공고';
                                                   break;
                                                 case 2:
-                                                  itemName = '오늘의 날씨';
+                                                  itemName = '무당이';
                                                   break;
                                                 case 3:
-                                                  itemName = '학식 메뉴';
+                                                  itemName = '학식';
+                                                  break;
+                                                case 4:
+                                                  itemName = '도서관';
+                                                  break;
+                                                case 5:
+                                                  itemName = '강의';
+                                                  break;
+                                                case 6:
+                                                  itemName = '대학교';
+                                                  break;
+                                                case 7:
+                                                  itemName = '학사일정';
+                                                  break;
+                                                case 8:
+                                                  itemName = '가람이?';
                                                   break;
                                                 default:
                                                   itemName = '~~~~~~~~~~~';

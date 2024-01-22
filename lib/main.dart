@@ -16,6 +16,7 @@ import 'papago.dart' as papago;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 //import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() {
@@ -67,6 +68,7 @@ class _MyApp extends StatelessWidget {
       }
     }
 
+    String selectedLag = context.read<MainProvider>().language;
     List<String> stringList = message.boxString.split('|');
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 0.0),
@@ -216,11 +218,19 @@ class _MyApp extends StatelessWidget {
                                 onTap: () {
                                   // 버튼 클릭 이벤트 처리
                                   //print('버튼 $index 클릭됨');
-                                  if (context.read<MainProvider>().language ==
-                                      "KOR") {
+                                  if (selectedLag == "KOR") {
                                     String str = context
                                         .read<ListProvider>()
                                         .mainKoreanResponse[index];
+                                    context.read<MainProvider>().addMessage(
+                                        Message(
+                                            context
+                                                .read<ListProvider>()
+                                                .mainKorean[index],
+                                            false,
+                                            0,
+                                            0,
+                                            ''));
                                     context.read<MainProvider>().addMessage(
                                         Message(
                                             "$str",
@@ -236,7 +246,24 @@ class _MyApp extends StatelessWidget {
                                         .read<ListProvider>()
                                         .mainEnglishResponse[index];
                                     context.read<MainProvider>().addMessage(
-                                        Message("$str", true, 0, 0, ''));
+                                        Message(
+                                            context
+                                                .read<ListProvider>()
+                                                .mainEnglish[index],
+                                            false,
+                                            0,
+                                            0,
+                                            ''));
+                                    context.read<MainProvider>().addMessage(
+                                        Message(
+                                            "$str",
+                                            true,
+                                            0,
+                                            0,
+                                            context
+                                                .read<ListProvider>()
+                                                .mainResponsesUrl[index]
+                                                .toString()));
                                   }
 
                                   WidgetsBinding.instance
@@ -262,8 +289,7 @@ class _MyApp extends StatelessWidget {
                                   child: Center(
                                     // 텍스트를 중앙에 정렬하는 Center 위젯 추가
                                     child: Text(
-                                      context.watch<MainProvider>().language ==
-                                              "KOR"
+                                      selectedLag == "KOR"
                                           ? context
                                               .read<ListProvider>()
                                               .mainKorean[index]
@@ -287,6 +313,7 @@ class _MyApp extends StatelessWidget {
                               ),
                             ),
                           ),
+                          SizedBox(height: 5.0),
                           if (message.boxString != '')
                             Wrap(
                               spacing: 8.0,
@@ -316,7 +343,9 @@ class _MyApp extends StatelessWidget {
                                           // 텍스트를 중앙에 정렬하는 Center 위젯 추가
                                           child: Text(
                                             (stringList[index].contains('http'))
-                                                ? '자세한 내용 보러가기'
+                                                ? (selectedLag == 'KOR')
+                                                    ? '자세한 내용 보러가기'
+                                                    : "Going to see more details."
                                                 : stringList[index],
                                             style: TextStyle(
                                               fontSize: context
@@ -1102,14 +1131,48 @@ class ListProvider with ChangeNotifier {
   ];
   List<String> mainEnglishResponse = [
     'Club',
-    'Job Posting',
-    'mudang-i',
-    'Campus menu',
-    'Library',
+    '''I'll tell you about the employment notice.
+- Information on recruiting additional overseas internship (Australia) students for the semester 2024-1 (re-application for students who fail the screening is possible)
+-2023-List of companies participating in short-term field training in winter (4th) (Application period: ~12.17)
+-Information on the closing of application for the Jump-up Project Allowance for 2023
+-Information on the schedule of the Gachon University Job Plus Center (employment career center) program in December 2023
+-2023-Winter (short-term) field training semester system implementation guide (+extended document submission deadline)''',
+    '''The shaman will tell you about the information.
+
+◆ Operation Overview
+- Operating hours: 08:30 to 17:30
+- Dispatch interval: 10 minutes
+- IT Convergence University → Student Life Center, Student Life Center → IT Convergence University Starts at the same time
+- Route:
+· IT Convergence University → Graduate School of Education → Student Center → Student Living Center
+· Student Living Center → Student Center → Central Library → College of Arts and Sports 1 → Global Center → IT Convergence University
+◆ Other matters
+-12:00 to 13:00: Business hours
+-08:30 to 09:00 : Additional bus input elasticity operation depending on the situation
+- Non-operating during vacation or rainy weather ''',
+    '''The menu at the cafeteria is different for each student.
+Can you choose the restaurant you want to know?''',
+    '''Let me tell you about the library.
+
+Gachon University Library consists of Global Campus Central Library, Electronic Information Library, and Medical Campus Central Library.
+Find more information on our website!''',
     'Lecture',
     'University Graduate',
-    'Calendar',
-    'Garame ?',
+    '''I'll let you know about my academic schedule.
+
+-11.24 to 12.21 P - Working Project (4 weeks)
+-12.08 to 12.14 Final exams
+-12.15 to 12.21 reinforcement period
+-12.18 to 12.29 Re-entry application period
+-12.22~02.29 Unregistered leave of absence period
+-12.22 Winter vacation
+-12.26~12.28 Report and correction
+''',
+    '''Let me introduce Garam.
+
+🤖"Garam" is a combination of Gachon University and the school's symbol, the pinwheel, and means Gachon University's only chatbot.
+
+Garam's Whale 🐳 character symbolizes freedom in clear water and features a gachon pinwheel in the form of a water fountain above the head.''',
   ];
   List<String> mainKoreanResponse = [
     '동아리',
@@ -1175,31 +1238,31 @@ class ListProvider with ChangeNotifier {
     '강의',
     '대학교',
     '학사일정',
-    '가람이?',
+    '가람이',
   ];
   List<String> topQuestionsListEnglish = [
     '1. How can I apply for a scholarship?',
     "2. Please provide the contact information for the university's support team",
-    '질문 3',
-    '질문 4',
-    '질문 5',
-    '질문 6',
-    '질문 7',
-    '질문 8',
-    '질문 9',
-    '질문 10',
+    '3.',
+    '4.',
+    '5.',
+    '6.',
+    '7.',
+    '8.',
+    '9.',
+    '10.',
   ];
   List<String> theSelectionListEnglish = [
-    '1. asdfasdf',
-    '2. fdsafdsa',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '10',
+    '1. ',
+    '2. ',
+    '3.',
+    '4.',
+    '5.',
+    '6.',
+    '7.',
+    '8.',
+    '9.',
+    '10.',
   ];
   void SelectionAddStringEnglish(String str) {
     theSelectionListEnglish.add(str);
