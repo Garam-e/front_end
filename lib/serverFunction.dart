@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-String httpServer = 'http:exampleIP';
+String httpServer = 'example';
 
 class sign {
   String email;

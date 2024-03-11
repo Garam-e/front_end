@@ -16,8 +16,34 @@ import 'papago.dart' as papago;
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'provider/searchList.dart';
+import 'googleAPI.dart';
+
+//번역 api 적용시켜야 하는 부분 3가지
+//입력창 영어일 경우
+//
+  //영어 -> 한국어 // 서버요청 // 한국어 ->영어
 
 //import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+Future<String> translateEnglishToKorean(String text) async {
+  try {
+    String translatedText = await translateText(text, 'ko');
+    print("한국어 번역 $translatedText");
+    return translatedText;
+  } catch (e) {
+    return 'error';
+  }
+}
+
+Future<String> translateKoreanToEnglish(String text) async {
+  print('영어 번역');
+  try {
+    String translatedText = await translateText(text, 'en');
+    return translatedText;
+  } catch (e) {
+    return 'error';
+  }
+}
 
 void main() {
   runApp(MultiProvider(
@@ -46,14 +72,17 @@ class MyApp extends StatelessWidget {
 }
 
 class _MyApp extends StatelessWidget {
+  FocusNode textFocus = FocusNode();
   TextEditingController _controller = TextEditingController();
   ScrollController _scrollController = ScrollController();
   void _scrollToBottom() {
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: Duration(milliseconds: 500),
-      curve: Curves.easeOut,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent, // 맨 밑으로 이동
+        duration: Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   Widget _buildMessageItem(BuildContext context, Message message) {
@@ -70,6 +99,7 @@ class _MyApp extends StatelessWidget {
 
     String selectedLag = context.read<MainProvider>().language;
     List<String> stringList = message.boxString.split('|');
+    List<String> stringListName = message.BoxStringName.split('|');
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 0.0),
       child: Row(
@@ -230,6 +260,7 @@ class _MyApp extends StatelessWidget {
                                             false,
                                             0,
                                             0,
+                                            '',
                                             ''));
                                     context.read<MainProvider>().addMessage(
                                         Message(
@@ -240,6 +271,10 @@ class _MyApp extends StatelessWidget {
                                             context
                                                 .read<ListProvider>()
                                                 .mainResponsesUrl[index]
+                                                .toString(),
+                                            context
+                                                .read<ListProvider>()
+                                                .mainResponsesUrlName[index]
                                                 .toString()));
                                   } else {
                                     String str = context
@@ -253,6 +288,7 @@ class _MyApp extends StatelessWidget {
                                             false,
                                             0,
                                             0,
+                                            '',
                                             ''));
                                     context.read<MainProvider>().addMessage(
                                         Message(
@@ -263,18 +299,14 @@ class _MyApp extends StatelessWidget {
                                             context
                                                 .read<ListProvider>()
                                                 .mainResponsesUrl[index]
+                                                .toString(),
+                                            context
+                                                .read<ListProvider>()
+                                                .mainResponsesUrlName[index]
                                                 .toString()));
                                   }
 
-                                  WidgetsBinding.instance
-                                      .addPostFrameCallback((_) {
-                                    _scrollController.animateTo(
-                                      _scrollController
-                                          .position.maxScrollExtent, // 맨 밑으로 이동
-                                      duration: Duration(milliseconds: 200),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  });
+                                  _scrollToBottom();
                                   //우선 임의로 처리 후에 안에 있는 텍스트 내용을 바탕으로 서버에서 데이터 받아오기
                                 },
                                 child: Container(
@@ -324,9 +356,25 @@ class _MyApp extends StatelessWidget {
                                     onTap: () {
                                       // 버튼 클릭 이벤트 처리
                                       //print('버튼 $index 클릭됨');
-                                      openURL(stringList[index]);
+                                      (stringList[index].contains('http'))
+                                          ? openURL(stringList[index])
+                                          : {
+                                              // 사용자 메세지
+                                              context
+                                                  .read<MainProvider>()
+                                                  .addMessage(Message(
+                                                      stringListName[index],
+                                                      false,
+                                                      0,
+                                                      0,
+                                                      '',
+                                                      ''))
+                                              //++답변 메세지
+                                            };
                                       // openURL('https://google.com');
                                       //우선 임의로 처리 후에 안에 있는 텍스트 내용을 바탕으로 서버에서 데이터 받아오기
+
+                                      _scrollToBottom();
                                     },
                                     child: Center(
                                       child: Container(
@@ -344,7 +392,7 @@ class _MyApp extends StatelessWidget {
                                           child: Text(
                                             (stringList[index].contains('http'))
                                                 ? (selectedLag == 'KOR')
-                                                    ? '자세한 내용 보러가기'
+                                                    ? stringListName[index]
                                                     : "Going to see more details."
                                                 : stringList[index],
                                             style: TextStyle(
@@ -418,24 +466,6 @@ class _MyApp extends StatelessWidget {
 
     final double containerHeight = screenHeight;
     final double containerWidth = screenWidth;
-
-    Future<String> translateEnglishToKorean(String text) async {
-      try {
-        String translatedText = await papago.getTranslation_papagoEnglish(text);
-        return translatedText;
-      } catch (e) {
-        return 'error';
-      }
-    }
-
-    Future<String> translateKoreanToEnglish(String text) async {
-      try {
-        String translatedText = await papago.getTranslation_papagoKorea(text);
-        return translatedText;
-      } catch (e) {
-        return 'error';
-      }
-    }
 
     context.read<MainProvider>().startInitState();
     return Scaffold(
@@ -629,6 +659,7 @@ class _MyApp extends StatelessWidget {
                     ),
                   ),
                 ),
+                //메세지 창
                 Positioned(
                   top: containerHeight * 0.034 + 54,
                   left: 0,
@@ -649,11 +680,13 @@ class _MyApp extends StatelessWidget {
                         }),
                   ),
                 ),
+
                 //if (context.watch<MainProvider>().inputText == "")
+                //즐겨찾기& 실시간 top 메뉴
                 Positioned(
                   top: context.watch<MainProvider>().isExpanded
-                      ? containerHeight * 0.65
-                      : containerHeight * 0.89, // 원하는 위치로 설정
+                      ? containerHeight - 78 - 169.78285714
+                      : containerHeight - 78, // 원하는 위치로 설정
                   child: GestureDetector(
                     onTap: () {
                       {
@@ -666,7 +699,7 @@ class _MyApp extends StatelessWidget {
                         AnimatedContainer(
                           duration: Duration(milliseconds: 300),
                           width: containerWidth,
-                          height: 35,
+                          height: 36,
                           decoration: BoxDecoration(
                             color: Color.fromARGB(255, 235, 237, 238),
                             borderRadius: BorderRadius.only(
@@ -700,15 +733,16 @@ class _MyApp extends StatelessWidget {
                     ),
                   ),
                 ),
+                // 즐겨찾기 확장창
                 if (context.watch<MainProvider>()._isExpanded)
                   // if (context.watch<MainProvider>()._isExpanded &&
                   //     (context.watch<MainProvider>().inputText == ""))
                   Positioned(
-                    top: containerHeight * 0.699,
+                    top: containerHeight - 42 - 169.78285714, // 조정
                     child: Container(
                       color: Colors.white,
                       width: containerWidth, // 리스트뷰의 너비 지정
-                      height: containerHeight * 0.24, // 리스트뷰의 높이 지정
+                      height: 169.78285714, // 리스트뷰의 높이 지정
                       child: ListView.builder(
                         padding: EdgeInsets.zero, // 상단 여백 제거
                         itemCount:
@@ -756,7 +790,7 @@ class _MyApp extends StatelessWidget {
                             ),
                             onTap: () {
                               context.read<MainProvider>().addMessage(
-                                  Message(itemText, false, 0, 0, ''));
+                                  Message(itemText, false, 0, 0, '', ''));
                               context.read<MainProvider>().setIsExpanded();
                               _scrollToBottom();
                             },
@@ -765,12 +799,64 @@ class _MyApp extends StatelessWidget {
                       ),
                     ),
                   ),
+                //자동완선 검색창
+                // if (MediaQuery.of(context).viewInsets.bottom != 0)
+                // if (context.watch<MainProvider>().inputText.length != 0)
                 Positioned(
-                  top: containerHeight * 0.94,
+                  top: containerHeight - 42 - 169.78285714,
+                  child: Container(
+                    color: Colors.white,
+                    width: containerWidth, // 리스트뷰의 너비 지정
+                    height: (_controller.text.length != 0)
+                        ? containerHeight * 0.24
+                        : 0, // 리스트뷰의 높이 지정
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero, // 상단 여백 제거
+                      itemCount:
+                          (context.watch<MainProvider>().language == "KOR"
+                                  ? suggestionsKor
+                                  : suggestionsEng)
+                              .where((item) => item.contains(
+                                  context.watch<MainProvider>().inputText))
+                              .toList()
+                              .length,
+
+                      itemExtent: 35, // 아이템의 높이 지정
+                      itemBuilder: (BuildContext context, int index) {
+                        final String itemText =
+                            (context.watch<MainProvider>().language == "KOR"
+                                    ? suggestionsKor
+                                    : suggestionsEng)
+                                .where((item) => item.contains(
+                                    context.watch<MainProvider>().inputText))
+                                .toList()[index];
+                        if (_controller.text.length != 0)
+                          return ListTile(
+                            title: Text(
+                              itemText,
+                              style: TextStyle(fontSize: 14), // 글자 크기 지정
+                            ),
+                            onTap: () {
+                              context.read<MainProvider>().addMessage(
+                                  Message(itemText, false, 0, 0, '', ''));
+                              //context.read<MainProvider>().setIsExpanded();
+                              // context.read<MainProvider>().setInputText('');
+                              _controller.text = '';
+                              _scrollToBottom();
+                              textFocus.unfocus();
+                            },
+                          );
+                      },
+                    ),
+                  ),
+                ),
+
+                Positioned(
+                  top: containerHeight - 42,
                   left: 0,
                   child: Container(
                     width: containerWidth,
-                    height: containerHeight * 0.5,
+                    height: 42,
                     child: Stack(
                       children: [
                         Positioned(
@@ -798,16 +884,7 @@ class _MyApp extends StatelessWidget {
                                               .initState();
                                         }
                                         ;
-                                        WidgetsBinding.instance
-                                            .addPostFrameCallback((_) {
-                                          _scrollController.animateTo(
-                                            _scrollController.position
-                                                .maxScrollExtent, // 맨 밑으로 이동
-                                            duration:
-                                                Duration(milliseconds: 200),
-                                            curve: Curves.easeInOut,
-                                          );
-                                        });
+                                        _scrollToBottom();
                                       },
                                       child: Image.asset('assets/home.png'),
                                     ),
@@ -822,6 +899,7 @@ class _MyApp extends StatelessWidget {
                                     padding:
                                         EdgeInsets.symmetric(horizontal: 1),
                                     child: TextField(
+                                      focusNode: textFocus,
                                       controller: _controller,
                                       style: TextStyle(
                                         fontSize: 16,
@@ -858,29 +936,42 @@ class _MyApp extends StatelessWidget {
                                         suffixIcon: InkWell(
                                           onTap: () {
                                             if (_controller.text.isNotEmpty) {
-                                              context
-                                                  .read<MainProvider>()
-                                                  .setInputText("");
-                                              String text = _controller.text;
+                                              print('tae$_controller.text');
                                               if (context
                                                       .read<MainProvider>()
                                                       .language ==
                                                   "ENG") {
-                                                translateEnglishToKorean(text)
+                                                translateEnglishToKorean(
+                                                        _controller.text)
                                                     .then((translatedText) {
-                                                  text = translatedText;
+                                                  print('한국어$translatedText');
+                                                  //변수를 사용해서 번역 api 사용
+                                                  // context
+                                                  //     .read<MainProvider>()
+                                                  //     .addMessage(Message(
+                                                  //         translatedText,
+                                                  //         false,
+                                                  //         0,
+                                                  //         0,
+                                                  //         '',
+                                                  //         ''));
                                                 }).catchError((error) {
                                                   print('번역 실패: $error');
                                                 });
+                                                print(
+                                                    'tae134$_controller.text');
                                               }
+
                                               //서버 모델에서 답변요청
                                               if (context
                                                       .read<MainProvider>()
                                                       .language ==
                                                   "ENG") {
-                                                translateKoreanToEnglish(text)
+                                                translateKoreanToEnglish(
+                                                        _controller.text)
                                                     .then((translatedText) {
-                                                  text = translatedText;
+                                                  _controller.text =
+                                                      translatedText;
                                                 }).catchError((error) {
                                                   print('번역 실패: $error');
                                                 });
@@ -893,19 +984,13 @@ class _MyApp extends StatelessWidget {
                                                       false,
                                                       0,
                                                       0,
+                                                      '',
                                                       ''));
+
                                               _controller.clear();
                                               //스크롤 밑으로 내림
-                                              WidgetsBinding.instance
-                                                  .addPostFrameCallback((_) {
-                                                _scrollController.animateTo(
-                                                  _scrollController.position
-                                                      .maxScrollExtent, // 맨 밑으로 이동
-                                                  duration: Duration(
-                                                      milliseconds: 200),
-                                                  curve: Curves.easeInOut,
-                                                );
-                                              });
+                                              _scrollToBottom();
+                                              textFocus.unfocus();
                                             }
                                           },
                                           child: Padding(
@@ -926,9 +1011,12 @@ class _MyApp extends StatelessWidget {
                                       ),
                                       onChanged: (text) {
                                         // 입력 값이 변경될 때 수행할 작업을 여기에 작성하세요.
+
                                         context
                                             .read<MainProvider>()
                                             .setInputText(text);
+
+                                        // _controller.text = text; //역으로 입력
                                       },
                                     ),
                                   ),
@@ -1053,20 +1141,51 @@ class MainProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void serverSendMessage(Message message) {
+    _messages.add(message);
+    //여기에 서버 응답에 대한 내용을 추가
+    _messages.add(message);
+    notifyListeners();
+  }
+
   MyApp myAppInstance = MyApp();
 
   void initState() {
     // 초기 메시지 설정
     if (language == "KOR") {
-      addMessage(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0, 0, '',
-          showTimestampAndShareIcon: false));
-      addMessage(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9, 0, '',
-          showUserNameAndPhoto: false));
+      addMessage(Message(
+          "안녕하세요! 채팅에 오신 것을 환영합니다.",
+          true,
+          0,
+          0,
+          '',
+          showTimestampAndShareIcon: false,
+          ''));
+      addMessage(Message(
+          "안녕하세요! 채팅에 오신 것을 환영합니다.",
+          true,
+          9,
+          0,
+          '',
+          showUserNameAndPhoto: false,
+          ''));
     } else {
-      addMessage(Message("Hello! Welcome to the chat.", true, 0, 0, '',
-          showTimestampAndShareIcon: false));
-      addMessage(Message("Hello! Welcome to the chat.", true, 9, 0, '',
-          showUserNameAndPhoto: false));
+      addMessage(Message(
+          "Hello! Welcome to the chat.",
+          true,
+          0,
+          0,
+          '',
+          showTimestampAndShareIcon: false,
+          ''));
+      addMessage(Message(
+          "Hello! Welcome to the chat.",
+          true,
+          9,
+          0,
+          '',
+          showUserNameAndPhoto: false,
+          ''));
     }
   }
 
@@ -1075,18 +1194,42 @@ class MainProvider with ChangeNotifier {
   void startInitState() {
     if (language == "KOR") {
       if (!isInitialized) {
-        _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 0, 0, '',
-            showTimestampAndShareIcon: false));
-        _messages.add(Message("안녕하세요! 채팅에 오신 것을 환영합니다.", true, 9, 0, '',
-            showUserNameAndPhoto: false));
+        _messages.add(Message(
+            "안녕하세요! 채팅에 오신 것을 환영합니다.",
+            true,
+            0,
+            0,
+            '',
+            showTimestampAndShareIcon: false,
+            ''));
+        _messages.add(Message(
+            "안녕하세요! 채팅에 오신 것을 환영합니다.",
+            true,
+            9,
+            0,
+            '',
+            showUserNameAndPhoto: false,
+            ''));
         isInitialized = true;
       }
     } else {
       if (!isInitialized) {
-        _messages.add(Message("Hello! Welcome to the chat.", true, 0, 0, '',
-            showTimestampAndShareIcon: false));
-        _messages.add(Message("Hello! Welcome to the chat.", true, 9, 0, '',
-            showUserNameAndPhoto: false));
+        _messages.add(Message(
+            "Hello! Welcome to the chat.",
+            true,
+            0,
+            0,
+            '',
+            showTimestampAndShareIcon: false,
+            ''));
+        _messages.add(Message(
+            "Hello! Welcome to the chat.",
+            true,
+            9,
+            0,
+            '',
+            showUserNameAndPhoto: false,
+            ''));
         isInitialized = true;
       }
     }
@@ -1109,17 +1252,35 @@ class MainProvider with ChangeNotifier {
       {int box = 0,
       bool showTimestampAndShareIcon = true,
       bool showUserNameAndPhoto = true}) {
-    _messages.add(Message(text, isLeft, box, 0, '',
+    _messages.add(Message(
+        text,
+        isLeft,
+        box,
+        0,
+        '',
         showTimestampAndShareIcon: showTimestampAndShareIcon,
-        showUserNameAndPhoto: showUserNameAndPhoto));
+        showUserNameAndPhoto: showUserNameAndPhoto,
+        ''));
     //myAppInstance._scrollToBottom();
     notifyListeners();
   }
 }
 
 class ListProvider with ChangeNotifier {
-  List<String> mainResponsesUrl = [
+  // ++여기 인덱스를 하나의 질문에 대한 하나의 인덱스를 가지게 설정
+  List<String> mainResponsesUrlName = [
+    '자세한 내용 보러가기|알빠노',
+    '자세한 내용 보러가기',
     '',
+    '',
+    '자세한 내용 보러가기',
+    '',
+    '',
+    '자세한 내용 보러가기',
+    '',
+  ];
+  List<String> mainResponsesUrl = [
+    'https://www.gachon.ac.kr/kor/1148/subview.do|알빠노',
     'https://www.gachon.ac.kr/kor/1148/subview.do',
     '',
     '',
@@ -1201,7 +1362,10 @@ Garam's Whale 🐳 character symbolizes freedom in clear water and features a ga
     
 가천대학교 도서관은 글로벌캠퍼스 중앙도서관, 전자정보도서관, 메디컬캠퍼스 중앙도서관으로 구성되어 있어요.
 홈페이지에서 더 자세한 정보를 찾아보세요!''',
-    '''강의''',
+    '''바이오나노대학은 나노과학기술을 물리, 화학, 바이오, 생명과학 그리고 식품생명공학 및 영양학 분야에 적용하여 미래사회의 에너지, 전기전자, 재료, 환경, 의료, 식품분야에서 기술적 혁신을 도모하는 전문지식 배양과 인류의 지적자산에 기여할 수 있는 실무 연구능력을 양성하는 데에 교육목표를 둔다. 산업과 과학기술분야의 토대가 되는 창조적이고 폭 넓은 과학기술 인력을 양성함과 동시에 미래형 최첨단 학문의 전문가를 양성하기 위해 본 대학에서는 물리, 화학, 바이오나노, 생명과학 그리고 식품생명공학 및 영양학분야를 바탕으로 융합 교육과정을 구축하고 있다.
+
+위치: 예술·체육대학1
+☎ 031-750-5381''',
     '''대학 대학원''',
     '''학사일정에 대해 알려드릴게요.
     

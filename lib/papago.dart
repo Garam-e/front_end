@@ -2,8 +2,8 @@ import "package:http/http.dart" as http;
 import 'dart:convert';
 
 Future<String> getTranslation_papagoEnglish(String text) async {
-  String _client_id = "example";
-  String _client_secret = "example";
+  String _client_id = "qOQkwWaz62efFo6e36tS";
+  String _client_secret = "0J_FUcU3UU";
   String _content_type = "application/x-www-form-urlencoded; charset=UTF-8";
   String _url = "https://openapi.naver.com/v1/papago/n2mt";
 

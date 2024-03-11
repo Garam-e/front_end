@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'setting.dart';
 import 'token_store.dart';
 
-String httpServer = 'http:exampleIP';
+String httpServer = 'example';
 //사용자 정보 재설정 API//
 Future<void> updateUserInfo(String newNickname, String newPassword) async {
   try {
