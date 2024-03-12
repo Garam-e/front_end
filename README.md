@@ -1,6 +1,6 @@
 # Grame-e Chatbot Projec
 
-  <img src="assets/garam-E.png
+  <img src="./assets/garam-E.png
 ">
 
 
