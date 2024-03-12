@@ -1,23 +1,21 @@
 # Grame-e Chatbot Projec
 
-# **Introduce the project**
+## **Introduce the project**
 
 **Grame-e is a chatbot service for students at Gachon University. Running from March 2023 to July 2024, the project was developed to make college life more convenient for students. Built on Dart and Flutter, it provides a user-friendly interface**
 
-# **Development environment and technology used**
+## **Development environment and technology used**
 
 ### ### **Front-End**
 
-**Technology stack: Dart, Flutter
+## **Technology stack: Dart, Flutter**
 Key Features:
-1. Implementing an interface for user interaction**
+  1. Implementing an interface for user interaction
+  2. Show responses to user questions
+  3. User recognition through account authentication at Gachon University
+  4. Personalized grid message settings
 
-**2. Show responses to user questions**
-
-3. User recognition through account authentication at Gachon University
-4. Personalized grid message settings
-
-**Developed with Flutter, implemented in consideration of compatibility and performance across different platforms. The focus was on efficient, easy-to-maintain code writing through the Dart language**
+### **Developed with Flutter, implemented in consideration of compatibility and performance across different platforms. The focus was on efficient, easy-to-maintain code writing through the Dart language**
 
 ### **Translation function**
 
@@ -31,8 +29,8 @@ Key Features:
 
 ---
 
-**This is a brief introduction to the front-end part of the Grame-e project. We have worked to provide an easy-to-understand, accessible interface for users. The combination of Dart and Flutter was key to achieving this goal, and the integration of the Google Translate API expanded the scope of the project by enabling multilingual support **
-
+** This is a brief introduction to the front-end part of the Grame-e project. We have worked to provide an easy-to-understand, accessible interface for users. The combination of Dart and Flutter was key to achieving this goal, and the integration of the Google Translate API expanded the scope of the project by enabling multilingual support **
+ 
 ## Getting Started
 
 This project is a starting point for a Flutter application.
