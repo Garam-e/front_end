@@ -1,4 +1,4 @@
-<img src="./assets/garam-E.png" width="100" height="100"alt="placeholder" /> 
+<img src="./assets/garam-E.png" width="100" height="100" /> 
 # Grame-e Chatbot Projec
 
 
