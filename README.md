@@ -1,6 +1,7 @@
 # Grame-e Chatbot Projec
 <p align="center">
-  <img src="https://github.com/Garam-e/front_end/issues/1#issue-2180703666">
+  <img src="![garam-E](https://github.com/Garam-e/front_end/assets/118430480/56628d73-baa3-438c-ad89-48f9fb807791)
+">
 </p>
 
 
