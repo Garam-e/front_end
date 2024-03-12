@@ -6,7 +6,7 @@
 
 ## **Development environment and technology used**
 
-### ### **Front-End**
+### **Front-End**
 
 ## **Technology stack: Dart, Flutter**
 Key Features:
