@@ -1,4 +1,5 @@
-<img src="./assets/garam-E.png" width="100" height="100"alt="placeholder" /> # Grame-e Chatbot Projec
+<img src="./assets/garam-E.png" width="100" height="100"alt="placeholder" /> 
+# Grame-e Chatbot Projec
 
 
 **Grame-e is a chatbot service for students at Gachon University. Running from March 2023 to July 2024, the project was developed to make college life more convenient for students. Built on Dart and Flutter, it provides a user-friendly interface**
