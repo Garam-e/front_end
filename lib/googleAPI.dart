@@ -17,6 +17,7 @@ Future<String> translateText(String text, String targetLanguage) async {
       var decodedResponse = json.decode(response.body);
       String translatedText =
           decodedResponse['data']['translations'][0]['translatedText'];
+      print('번역된 내용 : $translatedText');
       return translatedText;
     } else {
       print('Failed to translate text. Error: ${response.statusCode}');

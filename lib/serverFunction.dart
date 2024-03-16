@@ -18,6 +18,43 @@ Future<http.Response> sendDataToServer(String email) async {
   return response;
 }
 
+Future<String> postChat(String sending) async {
+  final response = await http.post(
+    Uri.parse('$httpServer/chat'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode(<String, String>{'message': '$sending'}),
+  );
+
+  if (response.statusCode == 200) {
+    return utf8.decode(response.bodyBytes);
+  } else {
+    return '요청 실패: ${response.statusCode}';
+  }
+}
+
+Map<String, dynamic> parseResponse(String responseBody) {
+  print(responseBody);
+  try {
+    final parsed = jsonDecode(responseBody);
+    String answer = parsed['result']['answer'];
+    List<dynamic> buttonName = parsed['result']['button_name'];
+    List<dynamic> link = parsed['result']['link'];
+    return {
+      'answer': answer,
+      'button_name': buttonName,
+      'link': link,
+    };
+  } catch (e) {
+    print('JSON 파싱 중 오류 발생: $e');
+    print(responseBody);
+    print('오류출력');
+    // 필요에 따라 여기서 오류를 더 구체적으로 처리하거나, 빈 맵을 반환할 수 있습니다.
+    return {};
+  }
+}
+
 Future<http.Response> sendSignNumber(String number) async {
   var data = {"code": number, "email": test.email};
   final response = await http.patch(

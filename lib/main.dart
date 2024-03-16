@@ -18,11 +18,12 @@ import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'provider/searchList.dart';
 import 'googleAPI.dart';
+import 'serverFunction.dart';
 
 //번역 api 적용시켜야 하는 부분 3가지
 //입력창 영어일 경우
 //
-  //영어 -> 한국어 // 서버요청 // 한국어 ->영어
+//영어 -> 한국어 // 서버요청 // 한국어 ->영어
 
 //import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 Future<String> translateEnglishToKorean(String text) async {
@@ -245,68 +246,89 @@ class _MyApp extends StatelessWidget {
                             children: List.generate(
                               message.initbox,
                               (index) => GestureDetector(
-                                onTap: () {
+                                onTap: () async {
                                   // 버튼 클릭 이벤트 처리
                                   //print('버튼 $index 클릭됨');
-                                  if (selectedLag == "KOR") {
-                                    String str = context
-                                        .read<ListProvider>()
-                                        .mainKoreanResponse[index];
-                                    context.read<MainProvider>().addMessage(
-                                        Message(
-                                            context
-                                                .read<ListProvider>()
-                                                .mainKorean[index],
-                                            false,
-                                            0,
-                                            0,
-                                            '',
-                                            ''));
-                                    context.read<MainProvider>().addMessage(
-                                        Message(
-                                            "$str",
-                                            true,
-                                            0,
-                                            0,
-                                            context
-                                                .read<ListProvider>()
-                                                .mainResponsesUrl[index]
-                                                .toString(),
-                                            context
-                                                .read<ListProvider>()
-                                                .mainResponsesUrlName[index]
-                                                .toString()));
-                                  } else {
-                                    String str = context
-                                        .read<ListProvider>()
-                                        .mainEnglishResponse[index];
-                                    context.read<MainProvider>().addMessage(
-                                        Message(
-                                            context
-                                                .read<ListProvider>()
-                                                .mainEnglish[index],
-                                            false,
-                                            0,
-                                            0,
-                                            '',
-                                            ''));
-                                    context.read<MainProvider>().addMessage(
-                                        Message(
-                                            "$str",
-                                            true,
-                                            0,
-                                            0,
-                                            context
-                                                .read<ListProvider>()
-                                                .mainResponsesUrl[index]
-                                                .toString(),
-                                            context
-                                                .read<ListProvider>()
-                                                .mainResponsesUrlName[index]
-                                                .toString()));
-                                  }
 
+                                  context.read<MainProvider>().addMessage(
+                                      Message(
+                                          context
+                                                      .read<MainProvider>()
+                                                      .language ==
+                                                  "ENG"
+                                              ? context
+                                                  .read<ListProvider>()
+                                                  .mainEnglish[index]
+                                              : context
+                                                  .read<ListProvider>()
+                                                  .mainKorean[index],
+                                          false,
+                                          0,
+                                          0,
+                                          '',
+                                          ''));
+                                  // context.read<MainProvider>().addMessage(
+                                  //     Message(
+                                  //         "$str",
+                                  //         true,
+                                  //         0,
+                                  //         0,
+                                  //         context
+                                  //             .read<ListProvider>()
+                                  //             .mainResponsesUrl[index]
+                                  //             .toString(),
+                                  //         context
+                                  //             .read<ListProvider>()
+                                  //             .mainResponsesUrlName[index]
+                                  //             .toString()));
+
+                                  String responsebody = "";
+
+                                  responsebody = await postChat(context
+                                      .read<ListProvider>()
+                                      .mainKorean[index]);
+
+                                  print(responsebody);
+                                  Map<String, dynamic> result =
+                                      parseResponse(responsebody);
+                                  // 결과 출력
+                                  print('Answer: ${result['answer']}');
+                                  print(
+                                      'Button Name: ${result['button_name']}');
+                                  print('Link: ${result['link']}');
+//응답
+                                  String ListString = result['link']
+                                      .map((item) => item.toString())
+                                      .join('|');
+                                  String buttonList = result['button_name']
+                                      .map((item) => item.toString())
+                                      .join('|');
+                                  if (context.read<MainProvider>().language ==
+                                      "ENG") {
+                                    translateKoreanToEnglish(result['answer'])
+                                        .then((translatedText) {
+                                      context.read<MainProvider>().addMessage(
+                                          Message(translatedText, true, 0, 0,
+                                              ListString, buttonList));
+                                      _controller.clear();
+                                      //스크롤 밑으로 내림
+                                      _scrollToBottom();
+                                      textFocus.unfocus();
+                                    }).catchError((error) {
+                                      print('번역 실패: $error');
+                                    });
+                                  } else {
+                                    context.read<MainProvider>().addMessage(
+                                        Message(result['answer'], true, 0, 0,
+                                            ListString, buttonList));
+                                  }
+//질문
+
+                                  _controller.clear();
+                                  //스크롤 밑으로 내림
                                   _scrollToBottom();
+                                  textFocus.unfocus();
+
                                   //우선 임의로 처리 후에 안에 있는 텍스트 내용을 바탕으로 서버에서 데이터 받아오기
                                 },
                                 child: Container(
@@ -353,26 +375,75 @@ class _MyApp extends StatelessWidget {
                               children: List.generate(
                                 stringList.length,
                                 (index) => GestureDetector(
-                                    onTap: () {
+                                    onTap: () async {
                                       // 버튼 클릭 이벤트 처리
                                       //print('버튼 $index 클릭됨');
-                                      (stringList[index].contains('http'))
-                                          ? openURL(stringList[index])
-                                          : {
-                                              // 사용자 메세지
-                                              context
-                                                  .read<MainProvider>()
-                                                  .addMessage(Message(
-                                                      stringListName[index],
-                                                      false,
-                                                      0,
-                                                      0,
-                                                      '',
-                                                      ''))
-                                              //++답변 메세지
-                                            };
-                                      // openURL('https://google.com');
-                                      //우선 임의로 처리 후에 안에 있는 텍스트 내용을 바탕으로 서버에서 데이터 받아오기
+                                      if (stringList[index].contains('http')) {
+                                        openURL(stringList[index]);
+                                      } else {
+                                        context.read<MainProvider>().addMessage(
+                                            Message(stringListName[index],
+                                                false, 0, 0, '', ''));
+                                        String responsebody = "";
+                                        print('tae$_controller.text');
+                                        if (context
+                                                .read<MainProvider>()
+                                                .language ==
+                                            "ENG") {
+                                          translateEnglishToKorean(
+                                                  stringListName[index])
+                                              .then((translatedText) async {
+                                            print('번역내용 : $translatedText');
+                                            responsebody =
+                                                await postChat(translatedText);
+                                          }).catchError((error) {
+                                            print('번역 실패: $error');
+                                          });
+                                        } else {
+                                          responsebody = await postChat(
+                                              stringListName[index]);
+                                        }
+                                        print('번역이 필요한 내용$responsebody');
+                                        print('번역 끝');
+                                        Map<String, dynamic> result =
+                                            parseResponse(responsebody);
+                                        // 결과 출력
+                                        print('Answer: ${result['answer']}');
+                                        print(
+                                            'Button Name: ${result['button_name']}');
+                                        print('Link: ${result['link']}');
+
+                                        if (context
+                                                .read<MainProvider>()
+                                                .language ==
+                                            "ENG") {
+                                          translateKoreanToEnglish(
+                                                  result['answer'])
+                                              .then((translatedText) {
+                                            result['answer'] = translatedText;
+                                          }).catchError((error) {
+                                            print('번역 실패: $error');
+                                          });
+                                        }
+//질문
+
+                                        //응답
+                                        String ListString = result['link']
+                                            .map((item) => item.toString())
+                                            .join('|');
+                                        String buttonList =
+                                            result['button_name']
+                                                .map((item) => item.toString())
+                                                .join('|');
+                                        context.read<MainProvider>().addMessage(
+                                            Message(result['answer'], true, 0,
+                                                0, ListString, buttonList));
+
+                                        _controller.clear();
+                                        //스크롤 밑으로 내림
+                                        _scrollToBottom();
+                                        textFocus.unfocus();
+                                      }
 
                                       _scrollToBottom();
                                     },
@@ -788,11 +859,72 @@ class _MyApp extends StatelessWidget {
                               itemText,
                               style: TextStyle(fontSize: 14), // 글자 크기 지정
                             ),
-                            onTap: () {
+                            onTap: () async {
                               context.read<MainProvider>().addMessage(
                                   Message(itemText, false, 0, 0, '', ''));
-                              context.read<MainProvider>().setIsExpanded();
-                              _scrollToBottom();
+
+                              String responsebody = "";
+                              print('tae$_controller.text');
+                              if (context.read<MainProvider>().language ==
+                                  "ENG") {
+                                translateEnglishToKorean(itemText)
+                                    .then((translatedText) async {
+                                  responsebody = await postChat(translatedText);
+                                  Map<String, dynamic> result =
+                                      parseResponse(responsebody);
+
+                                  translateKoreanToEnglish(result['answer'])
+                                      .then((translatedText) {
+                                    String ListString = result['link']
+                                        .map((item) => item.toString())
+                                        .join('|');
+                                    String buttonList = result['button_name']
+                                        .map((item) => item.toString())
+                                        .join('|');
+                                    context.read<MainProvider>().addMessage(
+                                        Message(translatedText, true, 0, 0,
+                                            ListString, buttonList));
+                                    _controller.clear();
+                                    //스크롤 밑으로 내림
+                                    _scrollToBottom();
+                                    textFocus.unfocus();
+                                    context
+                                        .read<MainProvider>()
+                                        .setIsExpanded();
+                                    _scrollToBottom();
+                                  }).catchError((error) {
+                                    print('번역 실패: $error');
+                                  });
+                                }).catchError((error) {
+                                  print('번역 실패: $error');
+                                });
+                                print('tae134$_controller.text');
+                              } else {
+                                responsebody = await postChat(itemText);
+                                Map<String, dynamic> result =
+                                    parseResponse(responsebody);
+                                String ListString = result['link']
+                                    .map((item) => item.toString())
+                                    .join('|');
+                                String buttonList = result['button_name']
+                                    .map((item) => item.toString())
+                                    .join('|');
+                                context.read<MainProvider>().addMessage(Message(
+                                    result['answer'],
+                                    true,
+                                    0,
+                                    0,
+                                    ListString,
+                                    buttonList));
+                                _controller.clear();
+                                //스크롤 밑으로 내림
+                                _scrollToBottom();
+                                textFocus.unfocus();
+                                context.read<MainProvider>().setIsExpanded();
+                                _scrollToBottom();
+                              }
+
+                              //응답
                             },
                           );
                         },
@@ -836,14 +968,77 @@ class _MyApp extends StatelessWidget {
                               itemText,
                               style: TextStyle(fontSize: 14), // 글자 크기 지정
                             ),
-                            onTap: () {
+                            onTap: () async {
                               context.read<MainProvider>().addMessage(
                                   Message(itemText, false, 0, 0, '', ''));
-                              //context.read<MainProvider>().setIsExpanded();
-                              // context.read<MainProvider>().setInputText('');
-                              _controller.text = '';
-                              _scrollToBottom();
-                              textFocus.unfocus();
+
+                              String responsebody = "";
+                              print('tae$_controller.text');
+                              if (context.read<MainProvider>().language ==
+                                  "ENG") {
+                                translateEnglishToKorean(itemText)
+                                    .then((translatedText) async {
+                                  responsebody = await postChat(translatedText);
+                                  Map<String, dynamic> result =
+                                      parseResponse(responsebody);
+
+                                  translateKoreanToEnglish(result['answer'])
+                                      .then((translatedText) {
+                                    String ListString = result['link']
+                                        .map((item) => item.toString())
+                                        .join('|');
+                                    String buttonList = result['button_name']
+                                        .map((item) => item.toString())
+                                        .join('|');
+                                    context.read<MainProvider>().addMessage(
+                                        Message(translatedText, true, 0, 0,
+                                            ListString, buttonList));
+                                    _controller.clear();
+                                    //스크롤 밑으로 내림
+                                    _scrollToBottom();
+                                    textFocus.unfocus();
+                                    _controller.text = '';
+                                    _scrollToBottom();
+                                    textFocus.unfocus();
+                                  }).catchError((error) {
+                                    print('번역 실패: $error');
+                                  });
+                                }).catchError((error) {
+                                  print('번역 실패: $error');
+                                });
+                                print('tae134$_controller.text');
+                                _controller.clear();
+                                //스크롤 밑으로 내림
+                                _scrollToBottom();
+                                textFocus.unfocus();
+                                _controller.text = '';
+                                _scrollToBottom();
+                                textFocus.unfocus();
+                              } else {
+                                responsebody = await postChat(itemText);
+                                Map<String, dynamic> result =
+                                    parseResponse(responsebody);
+                                String ListString = result['link']
+                                    .map((item) => item.toString())
+                                    .join('|');
+                                String buttonList = result['button_name']
+                                    .map((item) => item.toString())
+                                    .join('|');
+                                context.read<MainProvider>().addMessage(Message(
+                                    result['answer'],
+                                    true,
+                                    0,
+                                    0,
+                                    ListString,
+                                    buttonList));
+                                _controller.clear();
+                                //스크롤 밑으로 내림
+                                _scrollToBottom();
+                                textFocus.unfocus();
+                                _controller.text = '';
+                                _scrollToBottom();
+                                textFocus.unfocus();
+                              }
                             },
                           );
                       },
@@ -934,49 +1129,8 @@ class _MyApp extends StatelessWidget {
                                               color: Color(0xFFBEBEBE)),
                                         ),
                                         suffixIcon: InkWell(
-                                          onTap: () {
+                                          onTap: () async {
                                             if (_controller.text.isNotEmpty) {
-                                              print('tae$_controller.text');
-                                              if (context
-                                                      .read<MainProvider>()
-                                                      .language ==
-                                                  "ENG") {
-                                                translateEnglishToKorean(
-                                                        _controller.text)
-                                                    .then((translatedText) {
-                                                  print('한국어$translatedText');
-                                                  //변수를 사용해서 번역 api 사용
-                                                  // context
-                                                  //     .read<MainProvider>()
-                                                  //     .addMessage(Message(
-                                                  //         translatedText,
-                                                  //         false,
-                                                  //         0,
-                                                  //         0,
-                                                  //         '',
-                                                  //         ''));
-                                                }).catchError((error) {
-                                                  print('번역 실패: $error');
-                                                });
-                                                print(
-                                                    'tae134$_controller.text');
-                                              }
-
-                                              //서버 모델에서 답변요청
-                                              if (context
-                                                      .read<MainProvider>()
-                                                      .language ==
-                                                  "ENG") {
-                                                translateKoreanToEnglish(
-                                                        _controller.text)
-                                                    .then((translatedText) {
-                                                  _controller.text =
-                                                      translatedText;
-                                                }).catchError((error) {
-                                                  print('번역 실패: $error');
-                                                });
-                                              }
-
                                               context
                                                   .read<MainProvider>()
                                                   .addMessage(Message(
@@ -987,10 +1141,93 @@ class _MyApp extends StatelessWidget {
                                                       '',
                                                       ''));
 
-                                              _controller.clear();
-                                              //스크롤 밑으로 내림
-                                              _scrollToBottom();
-                                              textFocus.unfocus();
+                                              String responsebody = "";
+                                              print('tae$_controller.text');
+                                              if (context
+                                                      .read<MainProvider>()
+                                                      .language ==
+                                                  "ENG") {
+                                                translateEnglishToKorean(
+                                                        _controller.text)
+                                                    .then(
+                                                        (translatedText) async {
+                                                  responsebody = await postChat(
+                                                      translatedText);
+                                                  Map<String, dynamic> result =
+                                                      parseResponse(
+                                                          responsebody);
+
+                                                  translateKoreanToEnglish(
+                                                          result['answer'])
+                                                      .then((translatedText) {
+                                                    String ListString =
+                                                        result['link']
+                                                            .map((item) =>
+                                                                item.toString())
+                                                            .join('|');
+                                                    String buttonList =
+                                                        result['button_name']
+                                                            .map((item) =>
+                                                                item.toString())
+                                                            .join('|');
+                                                    context
+                                                        .read<MainProvider>()
+                                                        .addMessage(Message(
+                                                            translatedText,
+                                                            true,
+                                                            0,
+                                                            0,
+                                                            ListString,
+                                                            buttonList));
+                                                    _controller.clear();
+                                                    //스크롤 밑으로 내림
+                                                    _scrollToBottom();
+                                                    textFocus.unfocus();
+                                                    context
+                                                        .read<MainProvider>()
+                                                        .setIsExpanded();
+                                                    _scrollToBottom();
+                                                  }).catchError((error) {
+                                                    print('번역 실패: $error');
+                                                  });
+                                                }).catchError((error) {
+                                                  print('번역 실패: $error');
+                                                });
+                                                print(
+                                                    'tae134$_controller.text');
+                                              } else {
+                                                responsebody = await postChat(
+                                                    _controller.text);
+                                                Map<String, dynamic> result =
+                                                    parseResponse(responsebody);
+                                                String ListString =
+                                                    result['link']
+                                                        .map((item) =>
+                                                            item.toString())
+                                                        .join('|');
+                                                String buttonList =
+                                                    result['button_name']
+                                                        .map((item) =>
+                                                            item.toString())
+                                                        .join('|');
+                                                context
+                                                    .read<MainProvider>()
+                                                    .addMessage(Message(
+                                                        result['answer'],
+                                                        true,
+                                                        0,
+                                                        0,
+                                                        ListString,
+                                                        buttonList));
+                                                _controller.clear();
+                                                //스크롤 밑으로 내림
+                                                _scrollToBottom();
+                                                textFocus.unfocus();
+                                                context
+                                                    .read<MainProvider>()
+                                                    .setIsExpanded();
+                                                _scrollToBottom();
+                                              }
                                             }
                                           },
                                           child: Padding(
